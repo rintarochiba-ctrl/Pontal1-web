@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.example.pontalweb.exception.ApiServerException;
+import com.example.pontalweb.exception.BadRequestException;
+import com.example.pontalweb.exception.ConflictException;
 import com.example.pontalweb.exception.ForbiddenException;
 import com.example.pontalweb.exception.NotFoundException;
 
@@ -29,6 +32,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ModelAndView handleNotFound(NotFoundException e) {
         return errorView("error/404", HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    //PontalのAPIが「入力が正しくない」と返した(画面で個別に受け止めなかった場合) → 400の画面
+    @ExceptionHandler(BadRequestException.class)
+    public ModelAndView handleBadRequest(BadRequestException e) {
+        return errorView("error/400", HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    //PontalのAPIが「すでにある、などで処理できない」と返した(画面で個別に受け止めなかった場合) → 409の画面
+    @ExceptionHandler(ConflictException.class)
+    public ModelAndView handleConflict(ConflictException e) {
+        return errorView("error/409", HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    //PontalのAPIの側のエラー、またはAPIに接続できなかった → 500の画面(原因は、ログにだけ残す)
+    @ExceptionHandler(ApiServerException.class)
+    public ModelAndView handleApiServerError(ApiServerException e) {
+        log.error("PontalのAPIの呼び出しでエラーが発生しました", e);
+        return errorView("error/500", HttpStatus.INTERNAL_SERVER_ERROR, null);
     }
 
     //URLの数字の部分に、文字が入っているなど → 400の画面
