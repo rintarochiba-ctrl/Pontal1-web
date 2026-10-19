@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    container_name: pontal1_web
+    ports:
+      - "8080:8080"
+    env_file:
+      # .env が無くても起動できるようにする(あれば読み込む)
+      - path: .env
+        required: false
+    environment:
+      # コンテナの中から、手元のPontalのAPI(Pontal1のdocker-composeで、8092に公開されている)を呼ぶ
+      PONTAL_API_BASE_URL: http://host.docker.internal:8092
+    extra_hosts:
+      # Linuxなどでも、host.docker.internal で、手元(ホスト)に届くようにする
+      - "host.docker.internal:host-gateway"
