@@ -16,6 +16,18 @@
   </div>
 
   <div class="card">
+    <h2>エラー画面</h2>
+    <p>わざとエラーを起こして、エラー画面の表示を確認できます</p>
+    <div class="flex">
+      <a class="btn" href="<c:url value='/sample/items/abc'/>">400(不正なURL)</a>
+      <a class="btn" href="<c:url value='/sample/forbidden'/>">403(権限なし)</a>
+      <a class="btn" href="<c:url value='/sample/notfound'/>">404(見つからない)</a>
+      <a class="btn" href="<c:url value='/no-such-page'/>">404(存在しないURL)</a>
+      <a class="btn" href="<c:url value='/sample/server-error'/>">500(予期しないエラー)</a>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>ボタンとバッジ</h2>
     <div class="flex">
       <a class="btn btn-primary" href="#">主なボタン</a>

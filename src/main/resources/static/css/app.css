@@ -172,6 +172,12 @@ a:hover { text-decoration: underline; }
 }
 .pagination .current { background: var(--primary); border-color: var(--primary); color: #fff; }
 
+/* エラー画面(400 / 403 / 404 / 500) */
+.error-card { text-align: center; max-width: 560px; margin: 40px auto; padding: 48px 24px; }
+.error-code { font-size: 64px; font-weight: 700; color: var(--primary); line-height: 1; margin-bottom: 12px; }
+.error-card h2 { margin: 0 0 8px; font-size: 20px; }
+.error-card .btn { margin-top: 16px; }
+
 .text-muted { color: var(--muted); }
 .mt-16 { margin-top: 16px; }
 .flex { display: flex; gap: 12px; align-items: center; }

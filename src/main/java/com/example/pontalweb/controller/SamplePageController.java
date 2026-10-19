@@ -3,8 +3,11 @@ package com.example.pontalweb.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.pontalweb.exception.ForbiddenException;
+import com.example.pontalweb.exception.NotFoundException;
 import com.example.pontalweb.model.LoginUser;
 
 //共通レイアウトと、部品(CSS)の見た目を確認するための仮の画面。ログインができたら、削除する
@@ -21,5 +24,28 @@ public class SamplePageController {
         };
         model.addAttribute("loginUser", user);
         return "sample"; // /WEB-INF/jsp/sample.jsp が使われる
+    }
+
+    //以下は、エラー画面の確認用。わざと例外を投げて、GlobalExceptionHandlerが、エラー画面にすることを確かめる
+
+    @GetMapping("/sample/forbidden")
+    public String forbidden() {
+        throw new ForbiddenException("この画面を見る権限がありません(確認用)");
+    }
+
+    @GetMapping("/sample/notfound")
+    public String notFound() {
+        throw new NotFoundException("社員が見つかりません(確認用)");
+    }
+
+    @GetMapping("/sample/server-error")
+    public String serverError() {
+        throw new IllegalStateException("予期しないエラー(確認用)");
+    }
+
+    //URLの数字の部分に、文字(例: /sample/items/abc)を入れると、400の画面になる
+    @GetMapping("/sample/items/{id}")
+    public String item(@PathVariable Long id) {
+        return "sample";
     }
 }
