@@ -30,7 +30,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import com.example.pontalweb.client.SessionKeys;
 import com.example.pontalweb.controller.HomeController;
 import com.example.pontalweb.controller.LoginController;
+import com.example.pontalweb.controller.NewPasswordController;
 import com.example.pontalweb.model.LoginUser;
+import com.example.pontalweb.security.CognitoAuthClient;
 import com.example.pontalweb.security.CognitoAuthenticationProvider;
 import com.example.pontalweb.security.LoginFailedException;
 import com.example.pontalweb.security.LoginFailureHandler;
@@ -41,7 +43,8 @@ import com.example.pontalweb.security.PontalPrincipal;
 //SecurityConfigのテスト。実際のセキュリティの設定(SecurityConfig)を使って、
 //「ログインが必要か」「権限で見られる画面が分かれるか」「CSRF対策が効いているか」「ログイン・ログアウトの動き」を確認する
 //Cognitoでの確認(CognitoAuthenticationProvider)だけは、疑似のもの(Mock)に差し替える
-@WebMvcTest(controllers = { LoginController.class, HomeController.class, SecurityConfigTest.ProbeController.class })
+@WebMvcTest(controllers = { LoginController.class, HomeController.class, NewPasswordController.class,
+        SecurityConfigTest.ProbeController.class })
 @Import({ SecurityConfig.class, LoginSuccessHandler.class, LoginFailureHandler.class, SecurityConfigTest.ProbeController.class })
 class SecurityConfigTest {
 
@@ -59,6 +62,10 @@ class SecurityConfigTest {
 
     @MockBean
     private CognitoAuthenticationProvider authenticationProvider;
+
+    //NewPasswordControllerが使う(このテストでは、呼ばれない)
+    @MockBean
+    private CognitoAuthClient cognitoAuthClient;
 
     @BeforeEach
     void setUp() {
@@ -166,6 +173,52 @@ class SecurityConfigTest {
         mockMvc.perform(post("/login").with(csrf()).param("email", "a@example.com").param("password", "bad"));
 
         verify(authenticationProvider, times(1)).authenticate(any());
+    }
+
+    // ---------- 初回ログインの、新しいパスワード設定(ログイン前に開く画面)----------
+
+    @Test
+    void newPasswordPage_isNotBlockedByLoginCheck() throws Exception {
+        //ログイン前でも、この画面には、入れる(ログイン画面への移動は、画面側が、「途中でなければ」と判断して行う)
+        //セキュリティの移動先(http://localhost/login)ではなく、画面側の移動先(/login)になること
+        mockMvc.perform(get("/new-password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void newPasswordPage_whenFirstLoginIsInProgress_isShownWithoutLogin() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(SessionKeys.NEW_PASSWORD_EMAIL, "new@example.com");
+        session.setAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION, "s");
+
+        mockMvc.perform(get("/new-password").session(session))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void newPasswordSubmit_withoutCsrfToken_isRejected() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(SessionKeys.NEW_PASSWORD_EMAIL, "new@example.com");
+        session.setAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION, "s");
+
+        //他のサイトから、勝手に、パスワードの設定のフォームを送られないよう、確認用のトークンが無いと、403
+        mockMvc.perform(post("/new-password").session(session)
+                .param("newPassword", "NewPass123!").param("confirmPassword", "NewPass123!"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void newPasswordFailure_inLogin_redirectsToNewPasswordPage() throws Exception {
+        //ログインで、初期パスワードだと分かったら、失敗(エラー)ではなく、設定画面に進む
+        when(authenticationProvider.authenticate(any()))
+                .thenThrow(new com.example.pontalweb.security.NewPasswordRequiredException("new@example.com", "cognito-session"));
+
+        mockMvc.perform(post("/login").with(csrf()).param("email", "new@example.com").param("password", "initial"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/new-password"))
+                .andExpect(request().sessionAttribute(SessionKeys.NEW_PASSWORD_EMAIL, "new@example.com"))
+                .andExpect(request().sessionAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION, "cognito-session"));
     }
 
     // ---------- ログアウト ----------
