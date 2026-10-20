@@ -5,6 +5,7 @@ target/
 ### 秘密の値(Gitに上げない) ###
 .env
 .env.pass
+.mcp.json
 
 ### IDE ###
 .idea/

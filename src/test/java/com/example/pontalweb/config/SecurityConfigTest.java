@@ -42,7 +42,7 @@ import com.example.pontalweb.security.PontalPrincipal;
 //「ログインが必要か」「権限で見られる画面が分かれるか」「CSRF対策が効いているか」「ログイン・ログアウトの動き」を確認する
 //Cognitoでの確認(CognitoAuthenticationProvider)だけは、疑似のもの(Mock)に差し替える
 @WebMvcTest(controllers = { LoginController.class, HomeController.class, SecurityConfigTest.ProbeController.class })
-@Import({ SecurityConfig.class, LoginSuccessHandler.class, LoginFailureHandler.class, SecurityConfigTest.ProbeController.class })
+@Import({ SecurityConfig.class, ClockConfig.class, LoginSuccessHandler.class, LoginFailureHandler.class, SecurityConfigTest.ProbeController.class })
 class SecurityConfigTest {
 
     //権限のテスト用に、URLだけを受ける、テスト用のController
