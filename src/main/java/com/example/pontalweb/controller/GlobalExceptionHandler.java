@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,12 +16,27 @@ import com.example.pontalweb.exception.BadRequestException;
 import com.example.pontalweb.exception.ConflictException;
 import com.example.pontalweb.exception.ForbiddenException;
 import com.example.pontalweb.exception.NotFoundException;
+import com.example.pontalweb.exception.UnauthorizedException;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 //Controllerで起きた例外を、エラー画面(JSP)に変換する。画面のエラーなので、JSONではなく、HTMLを返す
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    //ログインの有効期限が切れた(PontalのAPIが401を返した)、またはトークンがない → セッションを捨てて、ログイン画面へ
+    @ExceptionHandler(UnauthorizedException.class)
+    public String handleUnauthorized(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate(); //古いトークンを、使い続けさせない
+        }
+        SecurityContextHolder.clearContext();
+        return "redirect:/login?expired";
+    }
 
     //権限がない → 403の画面
     @ExceptionHandler(ForbiddenException.class)

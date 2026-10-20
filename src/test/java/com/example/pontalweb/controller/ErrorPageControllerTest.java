@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -15,6 +16,7 @@ import jakarta.servlet.RequestDispatcher;
 
 //ErrorPageControllerのテスト。/error に、コンテナが入れるエラーのステータス(リクエストの属性)を渡して、画面の名前を確認する
 @WebMvcTest(ErrorPageController.class)
+@AutoConfigureMockMvc(addFilters = false) //認証のフィルターは外す(権限のテストは、SecurityConfigTestで行う)
 class ErrorPageControllerTest {
 
     @Autowired

@@ -39,6 +39,19 @@
       <artifactId>jakarta.servlet.jsp.jstl</artifactId>
     </dependency>
 
+    <!-- ログイン・ログアウト、セッション、CSRF対策、権限での画面の制限 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!-- Cognitoでのログイン(InitiateAuth)用。バージョンは、Pontal本体と同じにする -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>cognitoidentityprovider</artifactId>
+      <version>2.28.11</version>
+    </dependency>
+
     <!-- 開発用: Javaを保存・コンパイルすると、自動でアプリを再起動してくれる -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -52,6 +65,11 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -59,6 +77,14 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <!-- 手元のJDK(26)が、Mockitoの内部で使うByte Buddyの対応より新しいため、テストで、対応外の版でも動かす指定。CI(Java 17)では、無くても動く -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+        </configuration>
       </plugin>
     </plugins>
   </build>

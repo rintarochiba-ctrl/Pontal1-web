@@ -94,10 +94,11 @@ a:hover { text-decoration: underline; }
 }
 
 .user-box {
-  display: flex; align-items: center; gap: 10px;
   padding: 12px 8px 0; margin-top: 12px;
   border-top: 1px solid var(--line);
 }
+.user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.logout-form { margin: 0; }
 .avatar {
   width: 32px; height: 32px; border-radius: 50%;
   background: var(--primary-soft); color: var(--primary);
@@ -128,6 +129,7 @@ a:hover { text-decoration: underline; }
 .btn-danger { color: var(--danger); border-color: #f5c2c4; background: var(--danger-soft); }
 .btn-danger:hover { background: #fbdcdd; }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-block { width: 100%; }
 
 .badge {
   display: inline-block; padding: 2px 10px; border-radius: 999px;
@@ -177,6 +179,20 @@ a:hover { text-decoration: underline; }
 .error-code { font-size: 64px; font-weight: 700; color: var(--primary); line-height: 1; margin-bottom: 12px; }
 .error-card h2 { margin: 0 0 8px; font-size: 20px; }
 .error-card .btn { margin-top: 16px; }
+
+/* ログイン画面(共通レイアウトを使わない、1枚の画面) */
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.login-card {
+  width: 100%; max-width: 380px;
+  background: var(--card); border-radius: 16px;
+  padding: 32px 28px; box-shadow: 0 4px 20px rgba(15, 23, 42, .08);
+}
+.login-brand { text-align: center; margin-bottom: 24px; }
+.login-brand .brand-mark { margin: 0 auto 10px; width: 40px; height: 40px; font-size: 22px; border-radius: 10px; }
+.login-brand h1 { margin: 0; font-size: 22px; }
+.login-brand p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.login-note { margin-top: 16px; color: var(--muted); font-size: 12px; text-align: center; }
+.btn-lg { padding: 11px 16px; font-size: 14px; }
 
 .text-muted { color: var(--muted); }
 .mt-16 { margin-top: 16px; }

@@ -63,8 +63,15 @@
     <%-- ログイン中の人(ログインしていないときは出さない) --%>
     <c:if test="${not empty loginUser}">
       <div class="user-box">
-        <span class="avatar"><c:out value="${loginUser.initial}"/></span>
-        <span class="user-name"><c:out value="${loginUser.name}"/></span>
+        <div class="user-info">
+          <span class="avatar"><c:out value="${loginUser.initial}"/></span>
+          <span class="user-name"><c:out value="${loginUser.name}"/></span>
+        </div>
+        <%-- ログアウトは、POSTで送る。CSRF対策の確認用トークン(_csrf)を、一緒に送る --%>
+        <form class="logout-form" action="<c:url value='/logout'/>" method="post">
+          <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+          <button type="submit" class="btn btn-sm btn-block">ログアウト</button>
+        </form>
       </div>
     </c:if>
   </aside>
