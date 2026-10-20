@@ -3,8 +3,10 @@ package com.example.pontalweb.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.pontalweb.client.EmployeeDetail;
 import com.example.pontalweb.client.EmployeeListResponse;
 import com.example.pontalweb.client.PontalApiClient;
 
@@ -42,5 +44,13 @@ public class EmployeeController {
         model.addAttribute("totalPages", (response.totalCount() + PAGE_SIZE - 1) / PAGE_SIZE);
         model.addAttribute("keyword", keyword);
         return "employees";
+    }
+
+    //社員詳細。存在しない社員なら、APIが404を返し、共通のエラー処理で404の画面になる
+    @GetMapping("/employees/{id}")
+    public String detail(@PathVariable Long id, Model model){
+        EmployeeDetail employee = api.get("/api/employees/{id}", EmployeeDetail.class, id);
+        model.addAttribute("employee", employee);
+        return "employee-detail";
     }
 }
