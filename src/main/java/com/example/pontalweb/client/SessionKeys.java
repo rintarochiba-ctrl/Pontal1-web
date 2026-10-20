@@ -9,6 +9,11 @@ public final class SessionKeys {
     //ログイン中の人の情報(LoginUser)
     public static final String LOGIN_USER = "loginUser";
 
+    //初回ログインの、新しいパスワード設定の途中で使う値(どのメールアドレスの人か、Cognitoから受け取ったセッション)
+    //設定が終われば、すぐ消す。パスワードそのものは、セッションに入れない
+    public static final String NEW_PASSWORD_EMAIL = "newPasswordEmail";
+    public static final String NEW_PASSWORD_COGNITO_SESSION = "newPasswordCognitoSession";
+
     private SessionKeys() {
     }
 }

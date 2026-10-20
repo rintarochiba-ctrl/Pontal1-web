@@ -194,6 +194,21 @@ a:hover { text-decoration: underline; }
 .login-note { margin-top: 16px; color: var(--muted); font-size: 12px; text-align: center; }
 .btn-lg { padding: 11px 16px; font-size: 14px; }
 
+/* パスワード欄の、表示・非表示の目のマーク */
+.password-field { position: relative; }
+.password-field .form-control { padding-right: 42px; }
+.password-toggle {
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+  display: flex; padding: 4px; border: 0; background: none;
+  color: var(--muted); cursor: pointer;
+}
+.password-toggle:hover { color: var(--text); }
+.password-toggle .icon-hide { display: none; }
+.password-toggle.is-visible .icon-show { display: none; }
+.password-toggle.is-visible .icon-hide { display: block; }
+/* Edgeが、独自に出す目のマークと重なるので、消す */
+input[type="password"]::-ms-reveal { display: none; }
+
 .text-muted { color: var(--muted); }
 .mt-16 { margin-top: 16px; }
 .flex { display: flex; gap: 12px; align-items: center; }

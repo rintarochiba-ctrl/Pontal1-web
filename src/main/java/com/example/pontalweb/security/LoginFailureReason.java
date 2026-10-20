@@ -8,7 +8,10 @@ public enum LoginFailureReason {
 
     //メールアドレスかパスワードが違う。どちらが違うかは、教えない(アカウントの有無を、推測されないため)
     CREDENTIALS("credentials", "メールアドレスまたはパスワードが違います"),
-    NEW_PASSWORD_REQUIRED("newpassword", "初回ログインのパスワード変更が必要です。管理者に問い合わせてください"),
+    //初回ログイン。新しいパスワードの設定画面に移動するので、このメッセージは、ふだんは出ない
+    NEW_PASSWORD_REQUIRED("newpassword", "初回ログインのパスワード設定が必要です"),
+    //新しいパスワードの設定の途中で、時間が経ちすぎた(Cognitoのセッションが切れた)
+    NEW_PASSWORD_EXPIRED("newpasswordexpired", "時間が経ちすぎました。もう一度、初期パスワードでログインしてください"),
     PASSWORD_RESET_REQUIRED("passwordreset", "パスワードの再設定が必要です。管理者に問い合わせてください"),
     TOO_MANY_REQUESTS("toomany", "ログインの試行が多すぎます。しばらくしてからもう一度お試しください"),
     //Cognitoにはいるが、Pontalに社員として登録されていない
