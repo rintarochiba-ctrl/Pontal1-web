@@ -19,7 +19,8 @@
         </c:forEach>
       </select>
       <button type="submit" class="btn btn-primary">表示</button>
-      <a class="btn push-right" href="<c:url value='/payroll/upload'/>">給与明細をアップロード</a>
+      <a class="btn push-right" href="<c:url value='/payroll/history'/>">アップロード履歴</a>
+      <a class="btn btn-primary" href="<c:url value='/payroll/upload'/>">給与明細をアップロード</a>
     </form>
   </div>
 
