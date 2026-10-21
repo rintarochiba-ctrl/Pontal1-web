@@ -49,12 +49,12 @@ class SecurityConfigTest {
     //権限のテスト用に、URLだけを受ける、テスト用のController
     @Controller
     static class ProbeController {
-        @GetMapping({ "/employees", "/employees/new", "/payroll", "/payroll/upload", "/audit-logs" })
+        @GetMapping({ "/employees", "/employees/new", "/employees/{id}/edit", "/payroll", "/payroll/upload", "/audit-logs" })
         String probe() {
             return "probe";
         }
 
-        @PostMapping("/employees")
+        @PostMapping({ "/employees", "/employees/{id}", "/employees/{id}/delete" })
         String probePost() {
             return "probe";
         }
@@ -157,6 +157,62 @@ class SecurityConfigTest {
     @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
     void employeeRegister_submitWithoutCsrfToken_isRejected() throws Exception {
         mockMvc.perform(post("/employees")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotSubmitEmployeeEdit() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotSubmitEmployeeEdit() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canSubmitEmployeeEdit_butNotWithoutCsrfToken() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/employees/1")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotDeleteEmployee() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotDeleteEmployee() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canDeleteEmployee_butNotWithoutCsrfToken() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/employees/1/delete")).andExpect(status().isForbidden());
     }
 
     // ---------- ログイン ----------

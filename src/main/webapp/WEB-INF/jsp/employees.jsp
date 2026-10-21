@@ -3,6 +3,11 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <t:layout title="社員一覧" active="employees">
 
+  <%-- 削除のあとに、1回だけ出すお知らせ(Controllerが、redirect と一緒に渡す) --%>
+  <c:if test="${not empty successMessage}">
+    <div class="alert alert-success"><c:out value="${successMessage}"/></div>
+  </c:if>
+
   <div class="list-toolbar">
     <%-- 検索は、GETで送る(URLが /employees?keyword=開発 になる)。GETは、CSRFの札が要らない --%>
     <form class="search-form" action="<c:url value='/employees'/>" method="get">
