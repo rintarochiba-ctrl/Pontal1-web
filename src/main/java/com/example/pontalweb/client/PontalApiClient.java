@@ -47,6 +47,16 @@ public class PontalApiClient {
                 .body(responseType));
     }
 
+    //GET(トークンを、呼び出す側で指定する)。ログインの途中で使う
+    //ログインが成功した直後は、まだトークンがセッションに入っていないので、受け取ったトークンを、そのまま渡して、APIを呼ぶ
+    public <T> T getWithToken(String accessToken, String uri, Class<T> responseType, Object... uriVariables) {
+        return call(() -> restClient.get().uri(uri, uriVariables)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::throwApiException)
+                .body(responseType));
+    }
+
     //GET(一覧など、型の中に型がある場合。例: new ParameterizedTypeReference<List<SalarySlip>>() {})
     public <T> T get(String uri, ParameterizedTypeReference<T> responseType, Object... uriVariables) {
         return call(() -> restClient.get().uri(uri, uriVariables)

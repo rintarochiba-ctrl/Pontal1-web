@@ -73,6 +73,29 @@ class PontalApiClientTest {
     }
 
     @Test
+    void getWithToken_usesTheGivenToken_notTheSessionToken() {
+        //ログインの直後は、トークンが、まだセッションに入っていない。渡されたトークンを、そのまま使う
+        server.expect(requestTo(BASE_URL + "/api/me"))
+                .andExpect(header("Authorization", "Bearer just-issued-token"))
+                .andRespond(withSuccess("{\"id\":1,\"name\":\"山田太郎\"}", MediaType.APPLICATION_JSON));
+
+        Employee result = client.getWithToken("just-issued-token", "/api/me", Employee.class);
+
+        assertThat(result.name()).isEqualTo("山田太郎");
+        server.verify();
+    }
+
+    @Test
+    void getWithToken_mapsApiErrorsToExceptions() {
+        server.expect(requestTo(BASE_URL + "/api/me"))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"result\":false,\"message\":\"authentication required\"}"));
+
+        assertThatThrownBy(() -> client.getWithToken("t", "/api/me", Employee.class))
+                .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
     void get_withQueryVariables_expandsThem() {
         server.expect(requestTo(BASE_URL + "/api/employees?page=2&size=20"))
                 .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
