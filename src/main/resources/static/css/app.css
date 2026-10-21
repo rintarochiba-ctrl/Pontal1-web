@@ -217,7 +217,8 @@ a:hover { text-decoration: underline; }
 .quick-desc { display: block; font-size: 12px; color: var(--muted); }
 
 /* 給与明細 */
-.col-actions { width: 120px; text-align: right; }
+/* 操作の列。見出し(th)にも、表の「左寄せ」の指定(.table th)があるので、それより強い書き方(.table .col-actions)にして、見出しとボタンを、中央にそろえる */
+.table .col-actions { width: 120px; text-align: center; }
 
 /* 給与管理(社員の選択と、年月の絞り込み) */
 .payroll-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -225,6 +226,12 @@ a:hover { text-decoration: underline; }
 .payroll-select { width: 320px; max-width: 100%; }
 .payroll-select-sm { width: 120px; }
 .payroll-filter { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.push-right { margin-left: auto; }
+
+/* 給与明細のアップロード */
+.upload-card { max-width: 560px; }
+.upload-card .check-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; }
+.upload-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
 
 .text-muted { color: var(--muted); }
 .mt-16 { margin-top: 16px; }
