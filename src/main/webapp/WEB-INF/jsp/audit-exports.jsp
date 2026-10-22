@@ -58,7 +58,12 @@
                 </td>
                 <td class="col-center">
                   <c:choose>
-                    <c:when test="${b.status == 'COMPLETED'}"><a class="btn btn-sm" href="#">CSV</a></c:when>
+                    <c:when test="${b.status == 'COMPLETED'}">
+                        <a class="btn btn-sm" href="<c:url value='/audit-logs/exports/${b.batchId}/download'>
+                            <c:param name="start" value="${b.periodStart}"/>
+                            <c:param name="end" value="${b.periodEnd}"/>
+                        </c:url>">CSV</a>
+                    </c:when>
                     <c:otherwise>-</c:otherwise>
                   </c:choose>
                 </td>

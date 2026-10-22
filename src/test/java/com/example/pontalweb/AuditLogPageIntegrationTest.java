@@ -62,6 +62,20 @@ class AuditLogPageIntegrationTest extends LoggedInPageTestBase {
     }
 
     @Test
+    void exports_csvButtonLinksToDownload_withBatchIdAndPeriod() {
+        apiReturns(2026, 10,
+                batch(12, "2026-10-05", "2026-10-11", "COMPLETED", 100),
+                batch(13, "2026-10-12", "2026-10-18", "PROCESSING", null));
+
+        String body = openAs(systemAdminCookie, "/audit-logs/exports?year=2026&month=10");
+
+        //完了の週のボタンは、番号と期間つきのダウンロードのURLにつながる(ファイル名に、期間を使うため)
+        assertThat(body).containsPattern("href=\"/audit-logs/exports/12/download\\?start=2026-10-05(&|&amp;)end=2026-10-11\"");
+        //処理中の週には、ダウンロードのリンクが、出ない
+        assertThat(body).doesNotContain("/audit-logs/exports/13/download");
+    }
+
+    @Test
     void exports_showsDashForCountWhenProcessing_butZeroWhenCompletedWithNoRecords() {
         apiReturns(2026, 10,
                 batch(12, "2026-10-05", "2026-10-11", "COMPLETED", 0),
