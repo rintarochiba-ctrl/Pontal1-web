@@ -3,6 +3,11 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <t:layout title="社員詳細" active="employees">
 
+  <%-- 登録・編集のあとに、1回だけ出すお知らせ(Controllerが、redirect と一緒に渡す) --%>
+  <c:if test="${not empty successMessage}">
+    <div class="alert alert-success"><c:out value="${successMessage}"/></div>
+  </c:if>
+
   <%-- 上のカード: 名前・部署・役職・メールアドレス --%>
   <div class="card detail-header">
     <span class="detail-avatar"><c:out value="${employee.initial}"/></span>
