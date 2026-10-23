@@ -269,6 +269,7 @@ input[type="password"]::-ms-reveal { display: none; }
 .detail-name { margin: 0 0 6px; font-size: 22px; }
 .detail-badges { display: flex; gap: 6px; margin-bottom: 6px; }
 .detail-actions { margin-left: auto; display: flex; gap: 8px; }
+.inline-form { margin: 0; }
 
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
 .detail-grid .card { margin-top: 0; } /* .card + .card の余白を、ここでは打ち消す */
@@ -282,6 +283,26 @@ input[type="password"]::-ms-reveal { display: none; }
 @media (max-width: 860px) {
   .detail-grid { grid-template-columns: 1fr; }
   .detail-header { flex-wrap: wrap; }
+}
+
+/* 社員登録(入力フォーム) */
+.form-card { max-width: 640px; margin: 0 auto; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.check-row { display: flex; gap: 24px; }
+.form-group .check-row label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; }
+.password-rules { list-style: none; margin: 6px 0 0; padding: 0; font-size: 12px; color: var(--muted); }
+.password-rules li::before { content: "・"; }
+.password-rules li.ok { color: var(--success); }
+.password-rules li.ok::before { content: "✓ "; }
+.password-rules li.ng { color: var(--danger); font-weight: 600; }
+.password-rules li.ng::before { content: "✕ "; }
+.qa-edit { margin-bottom: 12px; }
+.qa-edit .form-control + .form-control { margin-top: 6px; }
+.form-wide { grid-column: 1 / -1; } /* 2列の入力欄の中で、幅いっぱいに広げる */
+textarea.form-control { resize: vertical; font-family: inherit; line-height: 1.6; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+@media (max-width: 860px) {
+  .form-grid { grid-template-columns: 1fr; }
 }
 
 .text-muted { color: var(--muted); }
