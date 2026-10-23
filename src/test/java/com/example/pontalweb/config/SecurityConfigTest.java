@@ -45,7 +45,7 @@ import com.example.pontalweb.security.PontalPrincipal;
 //Cognitoでの確認(CognitoAuthenticationProvider)だけは、疑似のもの(Mock)に差し替える
 @WebMvcTest(controllers = { LoginController.class, HomeController.class, NewPasswordController.class,
         SecurityConfigTest.ProbeController.class })
-@Import({ SecurityConfig.class, LoginSuccessHandler.class, LoginFailureHandler.class, SecurityConfigTest.ProbeController.class })
+@Import({ SecurityConfig.class, ClockConfig.class, LoginSuccessHandler.class, LoginFailureHandler.class, SecurityConfigTest.ProbeController.class })
 class SecurityConfigTest {
 
     //権限のテスト用に、URLだけを受ける、テスト用のController
