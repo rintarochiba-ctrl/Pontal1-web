@@ -172,6 +172,7 @@ a:hover { text-decoration: underline; }
   min-width: 32px; padding: 4px 10px; text-align: center;
   border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text);
 }
+.pagination .disabled { color: #c4c9d1; background: #f9fafb; }
 .pagination .current { background: var(--primary); border-color: var(--primary); color: #fff; }
 
 /* エラー画面(400 / 403 / 404 / 500) */
@@ -230,6 +231,32 @@ a:hover { text-decoration: underline; }
 .password-toggle.is-visible .icon-hide { display: block; }
 /* Edgeが、独自に出す目のマークと重なるので、消す */
 input[type="password"]::-ms-reveal { display: none; }
+
+/* 社員一覧 */
+.list-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+.search-form { display: flex; gap: 8px; }
+.search-form .form-control { width: 260px; }
+
+.employee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.employee-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 20px 16px 12px; text-align: center;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+}
+.employee-avatar {
+  width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%;
+  background: var(--primary-soft); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700;
+}
+.employee-name { font-weight: 700; }
+.employee-sub { font-size: 12px; color: var(--muted); }
+.employee-link {
+  display: block; margin-top: 14px; padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12px; font-weight: 600;
+}
 
 .text-muted { color: var(--muted); }
 .mt-16 { margin-top: 16px; }
