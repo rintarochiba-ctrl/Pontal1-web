@@ -12,14 +12,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.example.pontalweb.config.ClockConfig;
+
 //LoginController と HomeController のテスト。画面の名前と、画面に出すメッセージを確認する
 //(認証のフィルターは外す。ログインが必要かどうかは、SecurityConfigTestで確認する)
 @WebMvcTest(controllers = { LoginController.class, HomeController.class })
+@Import(ClockConfig.class) //HomeControllerが使う、現在の時刻(Clock)
 @AutoConfigureMockMvc(addFilters = false)
 class LoginControllerTest {
 

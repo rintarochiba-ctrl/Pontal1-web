@@ -195,6 +195,28 @@ a:hover { text-decoration: underline; }
 .login-note { margin-top: 16px; color: var(--muted); font-size: 12px; text-align: center; }
 .btn-lg { padding: 11px 16px; font-size: 14px; }
 
+/* ホーム画面 */
+.greeting-card h2 { margin: 0 0 4px; font-size: 22px; }
+.greeting-card p { margin: 0; }
+
+.section-title { margin: 28px 0 12px; font-size: 15px; }
+
+.quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.quick-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px; border-radius: var(--radius);
+  background: var(--card); color: var(--text);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+}
+.quick-card:hover { text-decoration: none; box-shadow: 0 4px 12px rgba(15, 23, 42, .1); }
+.quick-icon {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
+  background: var(--primary-soft); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.quick-title { display: block; font-weight: 700; }
+.quick-desc { display: block; font-size: 12px; color: var(--muted); }
+
 /* パスワード欄の、表示・非表示の目のマーク */
 .password-field { position: relative; }
 .password-field .form-control { padding-right: 42px; }
