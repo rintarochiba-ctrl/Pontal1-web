@@ -18,6 +18,7 @@ public class LoginController {
             @RequestParam(required = false) String error,
             @RequestParam(required = false) String logout,
             @RequestParam(required = false) String expired,
+            @RequestParam(required = false) String passwordset,
             Model model) {
         //すでにログインしている人が、ログイン画面を開いたら、ホームに移動する
         if (authentication != null && authentication.isAuthenticated()
@@ -32,6 +33,9 @@ public class LoginController {
         }
         if (expired != null) {
             model.addAttribute("infoMessage", "ログインの有効期限が切れました。もう一度ログインしてください");
+        }
+        if (passwordset != null) {
+            model.addAttribute("infoMessage", "新しいパスワードを設定しました。新しいパスワードで、ログインしてください");
         }
         if (logout != null) {
             model.addAttribute("infoMessage", "ログアウトしました");
