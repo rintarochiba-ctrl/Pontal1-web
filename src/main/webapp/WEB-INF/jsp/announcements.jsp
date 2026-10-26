@@ -4,6 +4,11 @@
 <%-- 左のメニューで強調するのは「ホーム」(お知らせ一覧は、ホームの延長) --%>
 <t:layout title="お知らせ一覧" active="home">
 
+  <%-- 削除したあとなどに、Controllerが渡すメッセージ(redirectしても、1回だけ届く「フラッシュ属性」) --%>
+  <c:if test="${not empty successMessage}">
+    <div class="alert alert-success"><c:out value="${successMessage}"/></div>
+  </c:if>
+
   <div class="list-toolbar">
     <%-- 表示の切り替えと、種類の絞り込み。GETで送る(URLが /announcements?scope=mine&category=技術 になる) --%>
     <form class="announce-filter" action="<c:url value='/announcements'/>" method="get">

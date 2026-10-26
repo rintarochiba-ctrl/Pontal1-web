@@ -1,10 +1,14 @@
 package com.example.pontalweb.controller;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,11 +25,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.example.pontalweb.client.AnnouncementDetail;
 import com.example.pontalweb.client.AnnouncementItem;
 import com.example.pontalweb.client.AnnouncementListResponse;
 import com.example.pontalweb.client.PontalApiClient;
 import com.example.pontalweb.exception.ApiServerException;
 import com.example.pontalweb.exception.ForbiddenException;
+import com.example.pontalweb.exception.NotFoundException;
 import com.example.pontalweb.exception.UnauthorizedException;
 
 //AnnouncementController(お知らせ一覧)のテスト。PontalのAPIは、疑似のもの(Mock)にして、
@@ -163,6 +169,89 @@ class AnnouncementControllerTest {
 
         mockMvc.perform(get("/announcements").param("page", "4"))
                 .andExpect(model().attribute("pageNumbers", List.of(1, -1, 4, 5, 6, -1, 10)));
+    }
+
+    // ---------- 詳細 ----------
+
+    private AnnouncementDetail detail(long id) {
+        return new AnnouncementDetail(id, "年末調整のお願い", "対応依頼", true, "総務部", "DEPARTMENT", "開発部",
+                "2026-10-22T10:30:00", "本文です", "2026-10-22T10:30:00", true, false);
+    }
+
+    @Test
+    void detail_callsApiWithId_andPutsAnnouncementIntoModel() throws Exception {
+        AnnouncementDetail detail = detail(7);
+        when(api.get(eq("/api/announcements/{id}"), eq(AnnouncementDetail.class), eq(7L))).thenReturn(detail);
+
+        mockMvc.perform(get("/announcements/7"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("announcement-detail"))
+                .andExpect(model().attribute("announcement", detail));
+
+        verify(api).get(eq("/api/announcements/{id}"), eq(AnnouncementDetail.class), eq(7L));
+    }
+
+    @Test
+    void detail_whenNotFound_showsNotFoundView() throws Exception {
+        //見られないお知らせも、存在しないお知らせも、APIは同じ404を返す(存在を教えない)
+        when(api.get(eq("/api/announcements/{id}"), eq(AnnouncementDetail.class), eq(99L)))
+                .thenThrow(new NotFoundException("お知らせが見つかりません"));
+
+        mockMvc.perform(get("/announcements/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"));
+    }
+
+    @Test
+    void detail_withNonNumericId_showsBadRequestView() throws Exception {
+        mockMvc.perform(get("/announcements/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(view().name("error/400"));
+
+        verifyNoInteractions(api);
+    }
+
+    // ---------- 削除 ----------
+
+    private static final String DELETE_URI = "/api/announcements/{id}";
+
+    @Test
+    void delete_callsApiDelete_redirectsToList_withFlashMessage() throws Exception {
+        mockMvc.perform(post("/announcements/7/delete"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/announcements"))
+                .andExpect(flash().attribute("successMessage", "削除しました"));
+
+        verify(api).delete(eq(DELETE_URI), eq(7L));
+    }
+
+    @Test
+    void delete_whenNotAllowed_showsForbiddenView_withoutSuccessMessage() throws Exception {
+        //システム管理者以外の削除は、APIが403を返す。「削除しました」は、出さない
+        doThrow(new ForbiddenException("この操作を行う権限がありません")).when(api).delete(eq(DELETE_URI), eq(7L));
+
+        mockMvc.perform(post("/announcements/7/delete"))
+                .andExpect(status().isForbidden())
+                .andExpect(view().name("error/403"))
+                .andExpect(flash().attributeCount(0));
+    }
+
+    @Test
+    void delete_whenNotFound_showsNotFoundView() throws Exception {
+        doThrow(new NotFoundException("お知らせが見つかりません")).when(api).delete(eq(DELETE_URI), eq(7L));
+
+        mockMvc.perform(post("/announcements/7/delete"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"));
+    }
+
+    @Test
+    void delete_whenApiServerFails_showsServerErrorView() throws Exception {
+        doThrow(new ApiServerException("PontalのAPIに接続できませんでした")).when(api).delete(eq(DELETE_URI), eq(7L));
+
+        mockMvc.perform(post("/announcements/7/delete"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(view().name("error/500"));
     }
 
     // ---------- APIのエラー ----------

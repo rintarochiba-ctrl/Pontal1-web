@@ -295,6 +295,10 @@ input[type="password"]::-ms-reveal { display: none; }
 .announce-filter label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
 .announce-filter .form-control { width: auto; }
 .filter-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+/* お知らせ詳細 */
+.announce-detail-title { margin: 8px 0; font-size: 22px; }
+.announce-body { margin: 16px 0 0; white-space: pre-wrap; } /* 本文の改行を、そのまま出す */
+.announce-actions form { margin: 0; }
 /* ページ送りの「…」 */
 .pagination .ellipsis { border: none; background: none; min-width: 0; padding: 4px 2px; color: var(--muted); }
 /* ホームは、あいさつをヘッダーに出して、中身の先頭を、お知らせにする */
