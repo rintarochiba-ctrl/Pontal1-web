@@ -43,6 +43,8 @@ public class SecurityConfig {
                         //権限が必要なもの(権限が足りなければ、403の画面になる)
                         .requestMatchers("/payroll/**").hasRole("HR_ADMIN")
                         .requestMatchers("/audit-logs/**").hasRole("SYSTEM_ADMIN")
+                        //お知らせの作成・編集の画面は、システム管理者かHR管理者だけ(/announcements/{id}/edit の {id} は、何でもよい)
+                        .requestMatchers("/announcements/new", "/announcements/*/edit").hasAnyRole("SYSTEM_ADMIN", "HR_ADMIN")
                         //それ以外は、ログインしていれば、誰でも見られる
                         .anyRequest().authenticated())
                 .formLogin(form -> form

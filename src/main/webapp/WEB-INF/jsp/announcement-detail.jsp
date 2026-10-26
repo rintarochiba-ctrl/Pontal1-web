@@ -4,6 +4,11 @@
 <%-- Controllerが、announcement という名前で渡したお知らせ1件(AnnouncementDetail)を、表示する --%>
 <t:layout title="お知らせ詳細" active="home">
 
+  <%-- 作成・編集のあとに、Controllerが渡すメッセージ(redirectしても、1回だけ届く「フラッシュ属性」) --%>
+  <c:if test="${not empty successMessage}">
+    <div class="alert alert-success"><c:out value="${successMessage}"/></div>
+  </c:if>
+
   <div class="card">
     <div class="detail-badges">
       <%-- 重要なお知らせにだけ、赤い「重要」を出す --%>

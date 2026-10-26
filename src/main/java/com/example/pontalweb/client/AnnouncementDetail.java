@@ -23,7 +23,10 @@ public record AnnouncementDetail(
         String updatedAt,
         //ログイン中の人が、編集・削除できるか(画面のボタンを出すかの判断に使う。実際の権限チェックは、API側が行う)
         boolean canEdit,
-        boolean canDelete) {
+        boolean canDelete,
+        //宛先そのもの(編集画面のフォームに、保存済みの宛先を最初から入れるため。部署宛てのときだけ部署名、個人宛てのときだけ社員の番号)
+        String targetDepartment,
+        Long targetEmployeeId) {
 
     private static final DateTimeFormatter TEXT_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
 
@@ -38,6 +41,8 @@ public record AnnouncementDetail(
     public String getBody() { return body; }
     public boolean isCanEdit() { return canEdit; }
     public boolean isCanDelete() { return canDelete; }
+    public String getTargetDepartment() { return targetDepartment; }
+    public Long getTargetEmployeeId() { return targetEmployeeId; }
 
     //画面に出す日時(2026/10/22 10:30)。読めない形のときは、届いた文字のまま出す
     public String getCreatedAtText() {

@@ -111,7 +111,7 @@ class AnnouncementDetailPageIntegrationTest {
 
     private AnnouncementDetail detail(boolean important, String body, boolean canEdit, boolean canDelete) {
         return new AnnouncementDetail(7L, "年末調整の書類提出のお願い", "対応依頼", important, "総務部", "DEPARTMENT",
-                "開発部", "2026-10-22T10:30:00", body, "2026-10-22T10:30:00", canEdit, canDelete);
+                "開発部", "2026-10-22T10:30:00", body, "2026-10-22T10:30:00", canEdit, canDelete, "開発部", null);
     }
 
     private void stubDetail(AnnouncementDetail detail) {
