@@ -12,12 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.example.pontalweb.client.PontalApiClient;
 import com.example.pontalweb.config.ClockConfig;
 
 //LoginController と HomeController のテスト。画面の名前と、画面に出すメッセージを確認する
@@ -29,6 +31,10 @@ class LoginControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    //HomeControllerが、お知らせを取るために使う(このテストでは、お知らせの中身は見ない)
+    @MockBean
+    private PontalApiClient api;
 
     @Test
     void login_showsLoginView_withoutMessages() throws Exception {

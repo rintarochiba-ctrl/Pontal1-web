@@ -27,6 +27,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.example.pontalweb.client.PontalApiClient;
 import com.example.pontalweb.client.SessionKeys;
 import com.example.pontalweb.controller.HomeController;
 import com.example.pontalweb.controller.LoginController;
@@ -66,6 +67,10 @@ class SecurityConfigTest {
     //NewPasswordControllerが使う(このテストでは、呼ばれない)
     @MockBean
     private CognitoAuthClient cognitoAuthClient;
+
+    //HomeControllerが、お知らせを取るために使う(このテストでは、お知らせの中身は見ない)
+    @MockBean
+    private PontalApiClient api;
 
     @BeforeEach
     void setUp() {

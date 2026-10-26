@@ -284,6 +284,15 @@ input[type="password"]::-ms-reveal { display: none; }
   .detail-header { flex-wrap: wrap; }
 }
 
+/* ホームの「ハロワお知らせ」 */
+.announce-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.announce-head h2 { margin: 0; }
+.announce-date { white-space: nowrap; color: var(--muted); }
+/* ヘッダーの、画面の名前の横に出す文字(ホームのあいさつ) */
+.topbar-sub { margin-left: 16px; color: var(--muted); }
+/* ホームは、あいさつをヘッダーに出して、中身の先頭を、お知らせにする */
+.content > .section-title:first-child { margin-top: 0; }
+
 .text-muted { color: var(--muted); }
 .mt-16 { margin-top: 16px; }
 .flex { display: flex; gap: 12px; align-items: center; }
