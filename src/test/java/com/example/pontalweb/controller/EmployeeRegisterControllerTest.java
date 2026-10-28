@@ -43,7 +43,7 @@ class EmployeeRegisterControllerTest {
 
     private void apiReturnsCreatedId(long id) {
         EmployeeDetail created = new EmployeeDetail(id, "鈴木三郎", "s.suzuki@example.com", "開発部", null,
-                "2026-04-01", null, null, null, null, null, null);
+                "2026-04-01", null, null, null, null, null, null, null, false, false);
         when(api.post(eq("/api/employees"), any(), eq(EmployeeDetail.class))).thenReturn(created);
     }
 
@@ -76,9 +76,10 @@ class EmployeeRegisterControllerTest {
                 .param("isSystemAdmin", "true")
                 .param("isHrAdmin", "true"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/employees/5"))
+                //登録できたら、そのまま、編集画面(プロフィールの入力)に移動する
+                .andExpect(redirectedUrl("/employees/5/edit"))
                 .andExpect(flash().attribute("successMessage",
-                        "社員を登録しました。性別・年齢・出身地などのプロフィールは、「編集」から入力できます"));
+                        "社員を登録しました。続けて、性別・年齢・出身地などのプロフィールを入力してください"));
 
         EmployeeCreateRequest sent = (EmployeeCreateRequest) sentBody().getValue();
         //名前・メール・部署は前後の空白を取る。パスワードは、そのまま
@@ -98,7 +99,7 @@ class EmployeeRegisterControllerTest {
                 .param("joinDate", "2026-04-01")
                 .param("department", "開発部")
                 .param("position", "   "))
-                .andExpect(redirectedUrl("/employees/6"));
+                .andExpect(redirectedUrl("/employees/6/edit"));
 
         EmployeeCreateRequest sent = (EmployeeCreateRequest) sentBody().getValue();
         assertThat(sent.systemAdmin()).isFalse();

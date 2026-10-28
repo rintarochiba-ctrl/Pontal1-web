@@ -44,8 +44,8 @@ public class SecurityConfig {
                         //権限が必要なもの(権限が足りなければ、403の画面になる)
                         .requestMatchers("/payroll/**").hasRole("HR_ADMIN")
                         .requestMatchers("/audit-logs/**").hasRole("SYSTEM_ADMIN")
-                        .requestMatchers("/employees/new").hasRole("SYSTEM_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/employees").hasRole("SYSTEM_ADMIN")
+                        .requestMatchers("/employees/new", "/employees/*/edit").hasRole("SYSTEM_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/employees", "/employees/*", "/employees/*/delete").hasRole("SYSTEM_ADMIN")
                         //それ以外は、ログインしていれば、誰でも見られる
                         .anyRequest().authenticated())
                 .formLogin(form -> form
