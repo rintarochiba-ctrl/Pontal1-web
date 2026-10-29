@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ attribute name="title" required="true" description="ヘッダーに出す画面の名前" %>
 <%@ attribute name="active" required="false" description="メニューで強調する項目(home / employees / salary / payroll / auditlog)" %>
+<%@ attribute name="subtitle" required="false" description="ヘッダーの、画面の名前の横に出す文字(ホームのあいさつ など)" %>
 <%--
   使い方(各画面のJSP):
     <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
@@ -80,6 +81,9 @@
   <div class="main">
     <header class="topbar">
       <h1><c:out value="${title}"/></h1>
+      <c:if test="${not empty subtitle}">
+        <span class="topbar-sub"><c:out value="${subtitle}"/></span>
+      </c:if>
     </header>
     <main class="content">
       <jsp:doBody/>
