@@ -2,6 +2,7 @@ package com.example.pontalweb.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,6 +10,7 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.example.pontalweb.exception.ApiServerException;
@@ -26,6 +28,10 @@ import jakarta.servlet.http.HttpSession;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    //アップロードできるファイルの大きさの上限(application.properties の設定)。エラーの文に出すために、読む
+    @Value("${spring.servlet.multipart.max-file-size:}")
+    private String configuredMaxFileSize;
 
     //ログインの有効期限が切れた(PontalのAPIが401を返した)、またはトークンがない → セッションを捨てて、ログイン画面へ
     @ExceptionHandler(UnauthorizedException.class)
@@ -67,6 +73,20 @@ public class GlobalExceptionHandler {
     public ModelAndView handleApiServerError(ApiServerException e) {
         log.error("PontalのAPIの呼び出しでエラーが発生しました", e);
         return errorView("error/500", HttpStatus.INTERNAL_SERVER_ERROR, null);
+    }
+
+    //アップロードされたファイルが、上限(application.properties の spring.servlet.multipart.max-file-size)より大きい
+    //ファイルを読む段階で止まるので、各Controllerの中では受け止められない。ここで、理由が分かる文を出す
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ModelAndView handleTooLarge(MaxUploadSizeExceededException e) {
+        long limit = e.getMaxUploadSize(); //バイト数。Tomcatが止めた場合は、分からない(-1)ので、設定の値で補う
+        String size = limit >= 1024 * 1024 ? (limit / (1024 * 1024)) + "MB"
+                : limit > 0 ? (limit / 1024) + "KB"
+                : (configuredMaxFileSize == null || configuredMaxFileSize.isBlank() ? null : configuredMaxFileSize);
+        String message = size == null
+                ? "ファイルが大きすぎます。小さいファイルを選んで、もう一度お試しください"
+                : "ファイルが大きすぎます(上限: " + size + ")。小さいファイルを選んで、もう一度お試しください";
+        return errorView("error/400", HttpStatus.PAYLOAD_TOO_LARGE, message);
     }
 
     //URLの数字の部分に、文字が入っているなど → 400の画面
