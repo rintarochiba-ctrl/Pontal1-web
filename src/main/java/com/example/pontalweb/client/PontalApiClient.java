@@ -6,8 +6,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
@@ -80,6 +82,18 @@ public class PontalApiClient {
         return call(() -> restClient.post().uri(uri, uriVariables)
                 .header(HttpHeaders.AUTHORIZATION, bearer())
                 .body(body)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, this::throwApiException)
+                .body(responseType));
+    }
+
+    //POST(ファイルを含むフォームを、multipart/form-data で送る。給与明細のアップロードで使う)
+    //parts は、フォームの項目名と値。ファイルは、Resource(ByteArrayResource など)で渡す
+    public <T> T postMultipart(String uri, MultiValueMap<String, Object> parts, Class<T> responseType, Object... uriVariables) {
+        return call(() -> restClient.post().uri(uri, uriVariables)
+                .header(HttpHeaders.AUTHORIZATION, bearer())
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(parts)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::throwApiException)
                 .body(responseType));

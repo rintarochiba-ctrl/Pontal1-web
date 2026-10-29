@@ -69,6 +69,12 @@ class GlobalExceptionHandlerTest {
             throw new UnauthorizedException("ログインが必要です");
         }
 
+        //アップロードされたファイルが、上限より大きい(上限は、1MB = 1048576 バイト)
+        @GetMapping("/test/too-large")
+        String tooLarge() {
+            throw new org.springframework.web.multipart.MaxUploadSizeExceededException(1048576);
+        }
+
         //URLの数字(Long)の部分に、文字を入れると、400になる
         @GetMapping("/test/items/{id}")
         String item(@PathVariable Long id) {
@@ -78,6 +84,15 @@ class GlobalExceptionHandlerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void maxUploadSizeExceeded_returns413View_withLimitInMessage() throws Exception {
+        mockMvc.perform(get("/test/too-large"))
+                .andExpect(status().isPayloadTooLarge())
+                .andExpect(view().name("error/400"))
+                .andExpect(model().attribute("message",
+                        "ファイルが大きすぎます(上限: 1MB)。小さいファイルを選んで、もう一度お試しください"));
+    }
 
     @Test
     void forbiddenException_returns403View_withMessage() throws Exception {

@@ -13,7 +13,7 @@ class EmployeeDetailTest {
 
     private EmployeeDetail withSelfQa(String selfQa) {
         return new EmployeeDetail(1L, "山田太郎", "test@example.com", "開発部", "エンジニア",
-                "2018-04-01", "男性", 38, "東京都", null, null, selfQa);
+                "2018-04-01", "男性", 38, "東京都", null, null, selfQa, null, false, false);
     }
 
     @Test
@@ -30,8 +30,20 @@ class EmployeeDetailTest {
     }
 
     @Test
+    void parsesImageAndRoleFields() throws Exception {
+        //編集で、全項目を送り直すときに、画像と権限を落とさないため、読み取れていること
+        String json = "{\"id\":1,\"name\":\"山田太郎\",\"imageUrl\":\"employees/1.png\",\"isSystemAdmin\":true,\"isHrAdmin\":false}";
+
+        EmployeeDetail detail = objectMapper.readValue(json, EmployeeDetail.class);
+
+        assertThat(detail.getImageUrl()).isEqualTo("employees/1.png");
+        assertThat(detail.isSystemAdmin()).isTrue();
+        assertThat(detail.isHrAdmin()).isFalse();
+    }
+
+    @Test
     void showsDashWhenAgeAndJoinDateAreMissing() {
-        EmployeeDetail detail = new EmployeeDetail(1L, "山田太郎", null, null, null, null, null, null, null, null, null, null);
+        EmployeeDetail detail = new EmployeeDetail(1L, "山田太郎", null, null, null, null, null, null, null, null, null, null, null, false, false);
 
         assertThat(detail.getAgeText()).isEqualTo("-");
         assertThat(detail.getJoinDateText()).isEqualTo("-");
