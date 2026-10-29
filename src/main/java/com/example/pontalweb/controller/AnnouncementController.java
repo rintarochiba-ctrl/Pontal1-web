@@ -3,12 +3,16 @@ package com.example.pontalweb.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.pontalweb.client.AnnouncementDetail;
 import com.example.pontalweb.client.AnnouncementListResponse;
 import com.example.pontalweb.client.PontalApiClient;
 
-//お知らせ一覧の画面
+//お知らせの画面(一覧・詳細・削除)
 @Controller
 public class AnnouncementController {
 
@@ -53,5 +57,26 @@ public class AnnouncementController {
         model.addAttribute("category", category);
 
         return "announcements"; //画面の名前(JSPのファイル名から、.jsp を取ったもの)
+    }
+
+    //お知らせ詳細。見られない・存在しないお知らせは、APIが404を返し、共通のエラー処理で404の画面になる
+    //URLの、お知らせの番号の部分(/announcements/7 の 7)を、変数として受け取る
+    @GetMapping("/announcements/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        AnnouncementDetail announcement = api.get("/api/announcements/{id}", AnnouncementDetail.class, id);
+        //画面(JSP)では、announcement という名前で使う。JSPと、同じ名前にそろえる
+        model.addAttribute("announcement", announcement);
+        return "announcement-detail";
+    }
+
+    //お知らせの削除。ブラウザのフォームは、POSTとGETしか送れないので、画面からは POST で受ける
+    //APIには、DELETEで送る(システム管理者以外は、APIが403を返す)
+    @PostMapping("/announcements/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        api.delete("/api/announcements/{id}", id);
+        //redirectしたあとの、一覧の画面で、1回だけ表示するメッセージ(一覧のJSPは、successMessage という名前で受ける)
+        redirectAttributes.addFlashAttribute("successMessage", "削除しました");
+        //削除したお知らせの詳細は、もう開けないので、一覧に戻る(redirect: を付けると、URLを開き直す)
+        return "redirect:/announcements";
     }
 }
