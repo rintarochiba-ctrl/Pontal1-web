@@ -6,6 +6,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,21 +26,31 @@ public record EmployeeDetail(
         String birthplace,
         String hobby,
         String bio,
-        String selfQa) {
+        String selfQa,
+        String imageUrl,
+        @JsonProperty("isSystemAdmin") boolean systemAdmin,
+        @JsonProperty("isHrAdmin") boolean hrAdmin) {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final int MAX_SELF_QA = 3;
+    private static final int MAX_SELF_QA = SelfQaItem.MAX_ITEMS;
 
     public Long getId() { return id; }
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getDepartment() { return department; }
     public String getPosition() { return position; }
+    public String getJoinDate() { return joinDate; }
     public String getGender() { return gender; }
+    public Integer getAge() { return age; }
     public String getBirthplace() { return birthplace; }
     public String getHobby() { return hobby; }
     public String getBio() { return bio; }
     public String getSelfQa() { return selfQa; }
+    public String getImageUrl() { return imageUrl; }
+
+    //編集画面の、権限のチェックボックス用(真偽値は、EL式で isXxx() から取る)
+    public boolean isSystemAdmin() { return systemAdmin; }
+    public boolean isHrAdmin() { return hrAdmin; }
 
     //名前の頭文字。顔写真の代わりに、丸いアイコンに出す
     public String getInitial() {

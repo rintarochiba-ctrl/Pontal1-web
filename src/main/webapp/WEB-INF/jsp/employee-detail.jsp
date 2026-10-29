@@ -3,6 +3,14 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <t:layout title="社員詳細" active="employees">
 
+  <%-- 登録・編集のあとに、1回だけ出すお知らせ(Controllerが、redirect と一緒に渡す) --%>
+  <c:if test="${not empty successMessage}">
+    <div class="alert alert-success"><c:out value="${successMessage}"/></div>
+  </c:if>
+  <c:if test="${not empty errorMessage}">
+    <div class="alert alert-error"><c:out value="${errorMessage}"/></div>
+  </c:if>
+
   <%-- 上のカード: 名前・部署・役職・メールアドレス --%>
   <div class="card detail-header">
     <span class="detail-avatar"><c:out value="${employee.initial}"/></span>
@@ -22,6 +30,14 @@
     <c:if test="${loginUser.systemAdmin}">
       <div class="detail-actions">
         <a class="btn" href="<c:url value='/employees/${employee.id}/edit'/>">編集</a>
+        <%-- 自分自身には、削除ボタンを出さない(Controllerでも止める)。押すと、確認のダイアログが出て、OKなら送信する --%>
+        <c:if test="${loginUser.employeeId != employee.id}">
+          <form class="inline-form" action="<c:url value='/employees/${employee.id}/delete'/>" method="post"
+                onsubmit="return confirm('この社員を削除しますか?\nログインできなくなり、同じメールアドレスでは、再登録できません');">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+            <button type="submit" class="btn btn-danger">削除</button>
+          </form>
+        </c:if>
       </div>
     </c:if>
   </div>
