@@ -2,6 +2,7 @@ package com.example.pontalweb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -38,10 +39,13 @@ public class SecurityConfig {
                         //(これが無いと、JSPへの転送が、「ログインしていないアクセス」と判定されて、ログイン画面から出られなくなる)
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                         //ログインしなくても見られるもの。/error は、エラー画面を出すための内部の入り口
-                        .requestMatchers("/login", "/css/**", "/error").permitAll()
+                        //new-password は、初回ログインの途中の画面(まだログイン前)
+                        .requestMatchers("/login", "/new-password", "/css/**", "/error").permitAll()
                         //権限が必要なもの(権限が足りなければ、403の画面になる)
                         .requestMatchers("/payroll/**").hasRole("HR_ADMIN")
                         .requestMatchers("/audit-logs/**").hasRole("SYSTEM_ADMIN")
+                        .requestMatchers("/employees/new", "/employees/*/edit").hasRole("SYSTEM_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/employees", "/employees/*", "/employees/*/delete").hasRole("SYSTEM_ADMIN")
                         //それ以外は、ログインしていれば、誰でも見られる
                         .anyRequest().authenticated())
                 .formLogin(form -> form

@@ -89,6 +89,45 @@ class LoginHandlersTest {
         assertThat(response.getRedirectedUrl()).doesNotContain("secret");
     }
 
+    // ---------- 初回ログイン(初期パスワード)----------
+
+    @Test
+    void failure_whenNewPasswordRequired_redirectsToNewPasswordPage_notToLoginError() throws Exception {
+        LoginFailureHandler handler = new LoginFailureHandler();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationFailure(request, response, new NewPasswordRequiredException("new@example.com", "cognito-session"));
+
+        //失敗(エラー)としては、扱わない。新しいパスワードの設定画面に進む
+        assertThat(response.getRedirectedUrl()).isEqualTo("/new-password");
+    }
+
+    @Test
+    void failure_whenNewPasswordRequired_keepsEmailAndCognitoSessionInHttpSession() throws Exception {
+        LoginFailureHandler handler = new LoginFailureHandler();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        handler.onAuthenticationFailure(request, new MockHttpServletResponse(),
+                new NewPasswordRequiredException("new@example.com", "cognito-session"));
+
+        HttpSession session = request.getSession(false);
+        assertThat(session).isNotNull();
+        assertThat(session.getAttribute(SessionKeys.NEW_PASSWORD_EMAIL)).isEqualTo("new@example.com");
+        assertThat(session.getAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION)).isEqualTo("cognito-session");
+    }
+
+    @Test
+    void failure_whenNewPasswordRequired_doesNotPutEmailOrCognitoSessionInUrl() throws Exception {
+        LoginFailureHandler handler = new LoginFailureHandler();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationFailure(new MockHttpServletRequest(), response,
+                new NewPasswordRequiredException("new@example.com", "cognito-session"));
+
+        assertThat(response.getRedirectedUrl()).doesNotContain("new@example.com").doesNotContain("cognito-session");
+    }
+
     // ---------- LoginFailureReason ----------
 
     @Test
