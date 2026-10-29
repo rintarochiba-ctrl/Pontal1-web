@@ -152,6 +152,118 @@ class EmployeePagesIntegrationTest {
         assertThat(body).contains("name=\"initialPassword\"", "name=\"joinDate\"", "isSystemAdmin");
     }
 
+    // ---------- 必須の印(赤い＊)と、入力中のチェック ----------
+
+    private static final String REQUIRED_MARK = "<span class=\"required\">*</span>";
+
+    //ラベル(<label for="...">...</label>)の中の文字列を、取り出す
+    private String labelOf(String body, String inputId) {
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("<label for=\"" + inputId + "\">(.*?)</label>", java.util.regex.Pattern.DOTALL).matcher(body);
+        assertThat(m.find()).as(inputId + " のラベルがある").isTrue();
+        return m.group(1);
+    }
+
+    @Test
+    void register_marksRequiredFieldsWithRedAsterisk_andOnlyThose() {
+        String body = openAs(loginAs(admin()), "/employees/new");
+
+        //必須(API006): 氏名・メールアドレス・初期パスワード・入社日・部署
+        for (String id : List.of("name", "email", "initialPassword", "joinDate", "department")) {
+            assertThat(labelOf(body, id)).as(id).contains(REQUIRED_MARK);
+        }
+        //必須ではない: 役職
+        assertThat(labelOf(body, "position")).doesNotContain(REQUIRED_MARK);
+        //「＊は必須項目です」の説明も、ある
+        assertThat(body).contains("class=\"text-muted required-note\"");
+    }
+
+    @Test
+    void register_everyInputHasLabelForLiveValidation_andLoadsScriptBeforePasswordScript() {
+        String body = openAs(loginAs(admin()), "/employees/new");
+
+        //入力中のチェックの目印(data-label)が、6つの入力欄に付いている
+        for (String label : List.of("氏名", "メールアドレス", "初期パスワード", "入社日", "部署", "役職")) {
+            assertThat(body).contains("data-label=\"" + label + "\"");
+        }
+        assertThat(count(body, "data-label=")).isEqualTo(6);
+        //チェックのスクリプトを読み込む。パスワードの条件(PontalValidation)を使う、下のスクリプトより、先に読み込む
+        int load = body.indexOf("/js/form-validation.js");
+        int use = body.indexOf("PontalValidation.passwordRules");
+        assertThat(load).isPositive();
+        assertThat(use).isGreaterThan(load);
+    }
+
+    @Test
+    void register_keepsPasswordRuleList_forTheCheckmark() {
+        String body = openAs(loginAs(admin()), "/employees/new");
+
+        //パスワードの条件の一覧は、そのまま、ある(✓の判断は、同じ条件を使う)
+        assertThat(body).contains("id=\"passwordRules\"");
+        for (String rule : List.of("length", "lower", "upper", "number", "symbol")) {
+            assertThat(body).contains("data-rule=\"" + rule + "\"");
+        }
+    }
+
+    @Test
+    void register_requiredAttributes_stayForBrowserCheck() {
+        String body = openAs(loginAs(admin()), "/employees/new");
+
+        //ブラウザ自身のチェック(required)も、そのまま残っている(スクリプトが動かなくても、空では、送れない)
+        assertThat(body).containsPattern("id=\"name\"[^>]*\\srequired");
+        assertThat(body).containsPattern("id=\"email\"[^>]*\\srequired");
+        assertThat(body).containsPattern("id=\"initialPassword\"[^>]*\\srequired");
+        assertThat(body).containsPattern("id=\"joinDate\"[^>]*\\srequired");
+        assertThat(body).containsPattern("id=\"department\"[^>]*\\srequired");
+        assertThat(body).doesNotContainPattern("id=\"position\"[^>]*\\srequired");
+    }
+
+    @Test
+    void edit_marksOnlyNameAndJoinDateAsRequired() {
+        when(api.get(eq(URI), eq(EmployeeDetail.class), eq(3L))).thenReturn(detail());
+
+        String body = openAs(loginAs(admin()), "/employees/3/edit");
+
+        //必須(API007): 氏名・入社日
+        assertThat(labelOf(body, "name")).contains(REQUIRED_MARK);
+        assertThat(labelOf(body, "joinDate")).contains(REQUIRED_MARK);
+        //ほかは、必須ではない
+        for (String id : List.of("department", "position", "gender", "age", "birthplace", "hobby", "bio")) {
+            assertThat(labelOf(body, id)).as(id).doesNotContain(REQUIRED_MARK);
+        }
+        assertThat(count(body, REQUIRED_MARK)).isEqualTo(3); //ラベル2つ + 「＊は必須項目です」の説明1つ
+    }
+
+    @Test
+    void edit_hasLabelsForLiveValidation_andLoadsScript() {
+        when(api.get(eq(URI), eq(EmployeeDetail.class), eq(3L))).thenReturn(detail());
+
+        String body = openAs(loginAs(admin()), "/employees/3/edit");
+
+        for (String label : List.of("氏名", "入社日", "部署", "役職", "性別", "年齢", "出身地", "趣味や休日の過ごし方")) {
+            assertThat(body).contains("data-label=\"" + label + "\"");
+        }
+        assertThat(count(body, "data-label=")).isEqualTo(8);
+        assertThat(body).contains("src=\"/js/form-validation.js\"");
+        //編集画面には、パスワード欄が無いので、パスワードの条件は、出ない
+        assertThat(body).doesNotContain("passwordRules");
+    }
+
+    @Test
+    void validationScript_isServedToLoggedInUser_withTheSharedPasswordRules() {
+        ResponseEntity<String> response = rest.exchange("/js/form-validation.js", HttpMethod.GET,
+                new HttpEntity<>(cookieHeaders(loginAs(admin()))), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).contains("PontalValidation", "passwordRules", "data-label");
+    }
+
+    private HttpHeaders cookieHeaders(String cookie) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.COOKIE, cookie);
+        return headers;
+    }
+
     // ---------- 編集 ----------
 
     @Test

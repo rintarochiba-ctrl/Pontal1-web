@@ -353,6 +353,13 @@ textarea.form-control { resize: vertical; font-family: inherit; line-height: 1.6
 .announce-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 /* ページ送りの「…」 */
 .pagination .ellipsis { border: none; background: none; min-width: 0; padding: 4px 2px; color: var(--muted); }
+/* 入力フォームの、入力中のチェック(必須の＊と、OKのとき緑の✓、まちがいのとき赤いメッセージ) */
+.required-note { margin: 0 0 12px; font-size: 12px; }
+.form-control.is-valid { border-color: var(--success); }
+.field-msg { margin-top: 4px; font-size: 12px; line-height: 1.4; }
+.field-msg:empty { display: none; }
+.field-msg.ok { color: var(--success); font-weight: 700; }
+.field-msg.error { color: var(--danger); }
 /* ホームは、あいさつをヘッダーに出して、中身の先頭を、お知らせにする */
 .content > .section-title:first-child { margin-top: 0; }
 

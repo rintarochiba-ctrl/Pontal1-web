@@ -5,6 +5,7 @@
 
   <div class="card form-card">
     <h2>基本プロフィール入力</h2>
+    <p class="text-muted required-note"><span class="required">*</span> は必須項目です</p>
 
     <c:if test="${not empty errorMessage}">
       <div class="alert alert-error">
@@ -21,23 +22,23 @@
 
       <div class="form-grid">
         <div class="form-group">
-          <label for="name">氏名</label>
-          <input id="name" name="name" type="text" class="form-control" maxlength="50" required autofocus
+          <label for="name">氏名 <span class="required">*</span></label>
+          <input id="name" name="name" type="text" class="form-control" maxlength="50" required autofocus data-label="氏名"
                  value="<c:out value='${form.name}'/>">
         </div>
 
         <div class="form-group">
-          <label for="email">メールアドレス</label>
+          <label for="email">メールアドレス <span class="required">*</span></label>
           <input id="email" name="email" type="email" class="form-control" maxlength="255"
-                 placeholder="example@company.com" autocomplete="off" required
+                 placeholder="example@company.com" autocomplete="off" required data-label="メールアドレス"
                  value="<c:out value='${form.email}'/>">
         </div>
 
         <div class="form-group">
-          <label for="initialPassword">初期パスワード</label>
+          <label for="initialPassword">初期パスワード <span class="required">*</span></label>
           <div class="password-field">
             <input id="initialPassword" name="initialPassword" type="password" class="form-control"
-                   autocomplete="new-password" required>
+                   autocomplete="new-password" required data-label="初期パスワード">
             <button type="button" class="password-toggle" data-target="initialPassword" aria-label="パスワードを表示する">
               <svg class="icon icon-show" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="icon icon-hide" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -54,20 +55,20 @@
         </div>
 
         <div class="form-group">
-          <label for="joinDate">入社日</label>
-          <input id="joinDate" name="joinDate" type="date" class="form-control" required
+          <label for="joinDate">入社日 <span class="required">*</span></label>
+          <input id="joinDate" name="joinDate" type="date" class="form-control" required data-label="入社日"
                  value="<c:out value='${form.joinDate}'/>">
         </div>
 
         <div class="form-group">
-          <label for="department">部署</label>
-          <input id="department" name="department" type="text" class="form-control" maxlength="50" required
+          <label for="department">部署 <span class="required">*</span></label>
+          <input id="department" name="department" type="text" class="form-control" maxlength="50" required data-label="部署"
                  value="<c:out value='${form.department}'/>">
         </div>
 
         <div class="form-group">
           <label for="position">役職</label>
-          <input id="position" name="position" type="text" class="form-control" maxlength="50"
+          <input id="position" name="position" type="text" class="form-control" maxlength="50" data-label="役職"
                  value="<c:out value='${form.position}'/>">
         </div>
       </div>
@@ -87,6 +88,8 @@
     </form>
   </div>
 
+  <%-- 入力中のチェック(必須・文字数・形式)。data-label が付いた入力欄を、入力するたびに調べる。下のスクリプトより先に読み込む --%>
+  <script src="<c:url value='/js/form-validation.js'/>"></script>
   <script>
     // 目のマークごとに、対応する入力欄(data-target)の、表示・非表示を切り替える
     document.querySelectorAll('.password-toggle').forEach(function (button) {
@@ -100,14 +103,9 @@
     });
 
     // 初期パスワードの条件チェック。入力するたびに、条件ごとに、満たしていれば緑(ok)、満たしていなければ赤(ng)にする
-    // 条件は、Cognitoのユーザープールのパスワードポリシーに合わせる(変えるときは、ここと、上の<ul>だけ直す)
-    const passwordRules = {
-      length: function (v) { return v.length >= 8; },
-      lower:  function (v) { return /[a-z]/.test(v); },
-      upper:  function (v) { return /[A-Z]/.test(v); },
-      number: function (v) { return /[0-9]/.test(v); },
-      symbol: function (v) { return /[^A-Za-z0-9]/.test(v); }
-    };
+    // 条件は、Cognitoのユーザープールのパスワードポリシーに合わせる(変えるときは、form-validation.js の passwordRules と、上の<ul>を直す)
+    // 条件の中身は、form-validation.js に1つだけ置いて、「✓」の判断と、ここで、同じものを使う
+    const passwordRules = PontalValidation.passwordRules;
     const passwordInput = document.getElementById('initialPassword');
     const ruleItems = document.querySelectorAll('#passwordRules li');
 
