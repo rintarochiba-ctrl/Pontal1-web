@@ -5,6 +5,7 @@
 
   <div class="card form-card">
     <h2>プロフィール編集</h2>
+    <p class="text-muted required-note"><span class="required">*</span> は必須項目です</p>
 
     <%-- 登録のあと、この画面に移動してきたときのお知らせ(1回だけ出る) --%>
     <c:if test="${not empty successMessage}">
@@ -25,33 +26,33 @@
 
       <div class="form-grid">
         <div class="form-group">
-          <label for="name">氏名</label>
-          <input id="name" name="name" type="text" class="form-control" maxlength="50" required
+          <label for="name">氏名 <span class="required">*</span></label>
+          <input id="name" name="name" type="text" class="form-control" maxlength="50" required data-label="氏名"
                  value="<c:out value='${employee.name}'/>">
         </div>
 
         <div class="form-group">
-          <label for="joinDate">入社日</label>
-          <input id="joinDate" name="joinDate" type="date" class="form-control" required
+          <label for="joinDate">入社日 <span class="required">*</span></label>
+          <input id="joinDate" name="joinDate" type="date" class="form-control" required data-label="入社日"
                  value="<c:out value='${employee.joinDate}'/>">
         </div>
 
         <div class="form-group">
           <label for="department">部署</label>
-          <input id="department" name="department" type="text" class="form-control" maxlength="50"
+          <input id="department" name="department" type="text" class="form-control" maxlength="50" data-label="部署"
                  value="<c:out value='${employee.department}'/>">
         </div>
 
         <div class="form-group">
           <label for="position">役職</label>
-          <input id="position" name="position" type="text" class="form-control" maxlength="50"
+          <input id="position" name="position" type="text" class="form-control" maxlength="50" data-label="役職"
                  value="<c:out value='${employee.position}'/>">
         </div>
 
         <div class="form-group">
           <label for="gender">性別</label>
           <%-- 候補は出すが、自由に入力もできる(APIは、10文字までの文字) --%>
-          <input id="gender" name="gender" type="text" class="form-control" maxlength="10" list="genderOptions"
+          <input id="gender" name="gender" type="text" class="form-control" maxlength="10" list="genderOptions" data-label="性別"
                  value="<c:out value='${employee.gender}'/>">
           <datalist id="genderOptions">
             <option value="男性">
@@ -62,19 +63,19 @@
 
         <div class="form-group">
           <label for="age">年齢</label>
-          <input id="age" name="age" type="number" class="form-control" min="0" max="150"
+          <input id="age" name="age" type="number" class="form-control" min="0" max="150" data-label="年齢"
                  value="<c:out value='${employee.age}'/>">
         </div>
 
         <div class="form-group">
           <label for="birthplace">出身地</label>
-          <input id="birthplace" name="birthplace" type="text" class="form-control" maxlength="50"
+          <input id="birthplace" name="birthplace" type="text" class="form-control" maxlength="50" data-label="出身地"
                  value="<c:out value='${employee.birthplace}'/>">
         </div>
 
         <div class="form-group form-wide">
           <label for="hobby">趣味や休日の過ごし方</label>
-          <textarea id="hobby" name="hobby" class="form-control" rows="3" maxlength="255"><c:out value="${employee.hobby}"/></textarea>
+          <textarea id="hobby" name="hobby" class="form-control" rows="3" maxlength="255" data-label="趣味や休日の過ごし方"><c:out value="${employee.hobby}"/></textarea>
         </div>
 
         <div class="form-group form-wide">
@@ -121,5 +122,8 @@
       </div>
     </form>
   </div>
+
+  <%-- 入力中のチェック(必須・文字数・数の範囲)。data-label が付いた入力欄を、入力するたびに調べる。最初から入っている値も、開いた直後に調べる --%>
+  <script src="<c:url value='/js/form-validation.js'/>"></script>
 
 </t:layout>
