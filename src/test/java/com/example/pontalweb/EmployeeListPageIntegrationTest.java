@@ -184,6 +184,37 @@ class EmployeeListPageIntegrationTest {
 
         assertThat(body).contains("全 0 名");
         assertThat(count(body, "class=\"employee-card\"")).isZero();
+        //0件のときは、「該当する社員がいません」を出す
+        assertThat(body).contains("該当する社員がいません");
+    }
+
+    @Test
+    void list_whenNoEmployees_hidesPagination_butKeepsSearchBoxWithKeyword() {
+        when(api.get(eq(URI_WITH_KEYWORD), eq(EmployeeListResponse.class), eq(0), eq(8), eq("存在しない")))
+                .thenReturn(new EmployeeListResponse(List.of(), 0, null, null));
+
+        String body = openAs(loginAs(admin()), "/employees?keyword=存在しない");
+
+        assertThat(body).doesNotContain("class=\"pagination\"");
+        assertThat(body).contains("value=\"存在しない\""); //検索欄には、入力した文字が残り、探し直せる
+        assertThat(body).contains("name=\"keyword\"");
+    }
+
+    @Test
+    void list_whenNoEmployeesAtAll_alsoShowsMessage() {
+        //キーワードなしで、社員が1人もいないときも、同じメッセージになる
+        when(api.get(eq(URI), eq(EmployeeListResponse.class), eq(0), eq(8)))
+                .thenReturn(new EmployeeListResponse(List.of(), 0, null, null));
+
+        assertThat(openAs(loginAs(admin()), "/employees")).contains("該当する社員がいません");
+    }
+
+    @Test
+    void list_whenEmployeesExist_doesNotShowNoResultMessage() {
+        when(api.get(eq(URI), eq(EmployeeListResponse.class), eq(0), eq(8)))
+                .thenReturn(new EmployeeListResponse(List.of(employee(1, "山田太郎")), 1, null, null));
+
+        assertThat(openAs(loginAs(admin()), "/employees")).doesNotContain("該当する社員がいません");
     }
 
     // ---------- 検索 ----------

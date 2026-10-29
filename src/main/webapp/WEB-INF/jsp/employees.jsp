@@ -22,17 +22,27 @@
   </div>
   <p class="text-muted">全 <c:out value="${totalCount}"/> 名</p>
 
-  <div class="employee-grid">
-    <c:forEach var="e" items="${employees}">
-      <div class="employee-card">
-        <span class="employee-avatar"><c:out value="${e.initial}"/></span>
-        <div class="employee-name"><c:out value="${e.name}"/></div>
-        <div class="employee-sub"><c:out value="${e.department}"/></div>
-        <div class="employee-sub"><c:out value="${e.position}"/></div>
-        <a class="employee-link" href="<c:url value='/employees/${e.id}'/>">詳細プロフィール →</a>
+  <c:choose>
+    <%-- 検索結果が0件のときは、カードを出さずに、メッセージだけを出す --%>
+    <c:when test="${empty employees}">
+      <div class="card">
+        <p class="text-muted">該当する社員がいません</p>
       </div>
-    </c:forEach>
-  </div>
+    </c:when>
+    <c:otherwise>
+      <div class="employee-grid">
+        <c:forEach var="e" items="${employees}">
+          <div class="employee-card">
+            <span class="employee-avatar"><c:out value="${e.initial}"/></span>
+            <div class="employee-name"><c:out value="${e.name}"/></div>
+            <div class="employee-sub"><c:out value="${e.department}"/></div>
+            <div class="employee-sub"><c:out value="${e.position}"/></div>
+            <a class="employee-link" href="<c:url value='/employees/${e.id}'/>">詳細プロフィール →</a>
+          </div>
+        </c:forEach>
+      </div>
+    </c:otherwise>
+  </c:choose>
 
   <%-- 2ページ以上あるときだけ出す。「‹ 1 2 3 ›」の形。prev / next は、ないとき null --%>
   <c:if test="${totalPages > 1}">
