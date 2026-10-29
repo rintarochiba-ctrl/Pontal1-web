@@ -53,7 +53,8 @@ class SecurityConfigTest {
     //権限のテスト用に、URLだけを受ける、テスト用のController
     @Controller
     static class ProbeController {
-        @GetMapping({ "/employees", "/employees/new", "/employees/{id}/edit", "/payroll", "/payroll/upload", "/audit-logs" })
+        @GetMapping({ "/employees", "/employees/new", "/employees/{id}/edit", "/payroll", "/payroll/upload", "/audit-logs",
+                "/announcements/new", "/announcements/7/edit" })
         String probe() {
             return "probe";
         }
@@ -145,6 +146,8 @@ class SecurityConfigTest {
         mockMvc.perform(get("/payroll")).andExpect(status().isForbidden());
     }
 
+    // ---------- 社員の登録・編集・削除(システム管理者だけ) ----------
+
     @Test
     @WithMockUser(roles = "USER")
     void generalUser_cannotOpenEmployeeRegister_orSubmitIt() throws Exception {
@@ -225,6 +228,37 @@ class SecurityConfigTest {
     void systemAdmin_canDeleteEmployee_butNotWithoutCsrfToken() throws Exception {
         mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isOk());
         mockMvc.perform(post("/employees/1/delete")).andExpect(status().isForbidden());
+    }
+
+    // ---------- お知らせの作成・編集(システム管理者かHR管理者だけ) ----------
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotOpenAnnouncementForms() throws Exception {
+        mockMvc.perform(get("/announcements/new")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/announcements/7/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canOpenAnnouncementForms() throws Exception {
+        mockMvc.perform(get("/announcements/new")).andExpect(status().isOk());
+        mockMvc.perform(get("/announcements/7/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_canOpenAnnouncementForms() throws Exception {
+        mockMvc.perform(get("/announcements/new")).andExpect(status().isOk());
+        mockMvc.perform(get("/announcements/7/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotSubmitAnnouncementForms() throws Exception {
+        //画面を開けないだけでなく、フォームの送信(POST)も、できない
+        mockMvc.perform(post("/announcements/new").with(csrf())).andExpect(status().isForbidden());
+        mockMvc.perform(post("/announcements/7/edit").with(csrf())).andExpect(status().isForbidden());
     }
 
     // ---------- ログイン ----------

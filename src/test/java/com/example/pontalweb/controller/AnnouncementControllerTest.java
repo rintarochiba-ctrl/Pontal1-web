@@ -175,7 +175,7 @@ class AnnouncementControllerTest {
 
     private AnnouncementDetail detail(long id) {
         return new AnnouncementDetail(id, "年末調整のお願い", "対応依頼", true, "総務部", "DEPARTMENT", "開発部",
-                "2026-10-22T10:30:00", "本文です", "2026-10-22T10:30:00", true, false);
+                "2026-10-22T10:30:00", "本文です", "2026-10-22T10:30:00", true, false, "開発部", null);
     }
 
     @Test

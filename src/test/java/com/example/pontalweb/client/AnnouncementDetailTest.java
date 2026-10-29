@@ -34,6 +34,25 @@ class AnnouncementDetailTest {
     }
 
     @Test
+    void readsTargetDepartmentAndEmployeeId_forEditForm() throws Exception {
+        AnnouncementDetail dept = mapper.readValue(
+                JSON.replace("\"canDelete\":false,", "\"canDelete\":false,\"targetDepartment\":\"開発部\","),
+                AnnouncementDetail.class);
+        AnnouncementDetail personal = mapper.readValue(
+                JSON.replace("\"canDelete\":false,", "\"canDelete\":false,\"targetEmployeeId\":3,"),
+                AnnouncementDetail.class);
+        AnnouncementDetail all = mapper.readValue(JSON, AnnouncementDetail.class);
+
+        assertThat(dept.getTargetDepartment()).isEqualTo("開発部");
+        assertThat(dept.getTargetEmployeeId()).isNull();
+        assertThat(personal.getTargetEmployeeId()).isEqualTo(3L);
+        assertThat(personal.getTargetDepartment()).isNull();
+        //古いAPIのように、項目が無くても、読み取れる(nullになる)
+        assertThat(all.getTargetDepartment()).isNull();
+        assertThat(all.getTargetEmployeeId()).isNull();
+    }
+
+    @Test
     void createdAtText_isFormattedForScreen() throws Exception {
         assertThat(mapper.readValue(JSON, AnnouncementDetail.class).getCreatedAtText()).isEqualTo("2026/10/22 10:30");
     }
