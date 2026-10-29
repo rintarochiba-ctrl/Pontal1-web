@@ -126,6 +126,50 @@ class PontalApiClientTest {
     }
 
     @Test
+    void postMultipart_sendsFormWithFile_andBearerToken() {
+        server.expect(requestTo(BASE_URL + "/api/salary-slips"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer test-token"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.MULTIPART_FORM_DATA))
+                //フォームの項目名と、ファイル名・中身が、送られていること
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"employeeId\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"payMonth\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("filename=\"salary-slip.pdf\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("%PDF-dummy")))
+                .andRespond(withStatus(HttpStatus.CREATED)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"id\":10,\"employeeId\":3,\"payMonth\":\"2024-09\"}"));
+
+        org.springframework.util.LinkedMultiValueMap<String, Object> parts = new org.springframework.util.LinkedMultiValueMap<>();
+        parts.add("employeeId", "3");
+        parts.add("payMonth", "2024-09");
+        parts.add("file", new org.springframework.core.io.ByteArrayResource("%PDF-dummy".getBytes()) {
+            @Override
+            public String getFilename() {
+                return "salary-slip.pdf";
+            }
+        });
+
+        SalarySlipUploadResult result = client.postMultipart("/api/salary-slips", parts, SalarySlipUploadResult.class);
+
+        assertThat(result).isEqualTo(new SalarySlipUploadResult(10L, 3L, "2024-09"));
+        server.verify();
+    }
+
+    @Test
+    void postMultipart_whenAlreadyExists_throwsConflict() {
+        server.expect(requestTo(BASE_URL + "/api/salary-slips"))
+                .andRespond(withStatus(HttpStatus.CONFLICT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"result\":false,\"message\":\"既に2024-09分の給与明細が登録されています\"}"));
+
+        assertThatThrownBy(() -> client.postMultipart("/api/salary-slips",
+                new org.springframework.util.LinkedMultiValueMap<>(), SalarySlipUploadResult.class))
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("既に2024-09分の給与明細が登録されています");
+    }
+
+    @Test
     void post_sendsJsonBody_andParsesResponse() {
         server.expect(requestTo(BASE_URL + "/api/employees"))
                 .andExpect(method(HttpMethod.POST))

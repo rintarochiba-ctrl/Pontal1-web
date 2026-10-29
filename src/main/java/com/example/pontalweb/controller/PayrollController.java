@@ -1,6 +1,5 @@
 package com.example.pontalweb.controller;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -10,7 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.pontalweb.client.EmployeeOptionPage;
+import com.example.pontalweb.client.EmployeeOptions;
 import com.example.pontalweb.client.PontalApiClient;
 import com.example.pontalweb.client.SalarySlipSummary;
 
@@ -19,9 +18,6 @@ import com.example.pontalweb.client.SalarySlipSummary;
 //  ・「年月の絞り込み」: APIは、その人の全明細を返す(多くても、1年に12件)ので、画面の側(ここ)で絞る
 @Controller
 public class PayrollController {
-
-    private static final int PAGE_SIZE = 100; //社員一覧APIの、1回の最大件数
-    private static final int MAX_PAGES = 20;  //全員を取るときに、ページをたどる回数の上限(無限に繰り返さないため)
 
     private final PontalApiClient api;
 
@@ -34,7 +30,7 @@ public class PayrollController {
             @RequestParam(defaultValue = "") String year,
             @RequestParam(defaultValue = "") String month,
             Model model) {
-        model.addAttribute("options", loadAllEmployees());
+        model.addAttribute("options", EmployeeOptions.loadAll(api));
         model.addAttribute("employeeId", employeeId);
         model.addAttribute("year", year);
         model.addAttribute("month", month);
@@ -51,25 +47,6 @@ public class PayrollController {
             model.addAttribute("slips", filter(all, year, month));
         }
         return "payroll";
-    }
-
-    //社員を、全員分取る(1回100件ずつ、次のページが無くなるまで)
-    private List<EmployeeOptionPage.Option> loadAllEmployees() {
-        List<EmployeeOptionPage.Option> options = new ArrayList<>();
-        int page = 0;
-        for (int i = 0; i < MAX_PAGES; i++) {
-            EmployeeOptionPage result = api.get("/api/employees?page={page}&size={size}",
-                    EmployeeOptionPage.class, page, PAGE_SIZE);
-            if (result == null || result.items() == null) {
-                break;
-            }
-            options.addAll(result.items());
-            if (result.next() == null) {
-                break;
-            }
-            page = result.next();
-        }
-        return options;
     }
 
     //その人の明細にある、年の一覧(新しい年が先。絞り込みのプルダウンの候補)

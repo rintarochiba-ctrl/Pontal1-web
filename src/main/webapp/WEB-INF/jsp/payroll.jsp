@@ -3,6 +3,11 @@
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <t:layout title="給与管理" active="payroll">
 
+  <%-- アップロードのあとに、1回だけ出すお知らせ(Controllerが、redirect と一緒に渡す) --%>
+  <c:if test="${not empty successMessage}">
+    <div class="alert alert-success"><c:out value="${successMessage}"/></div>
+  </c:if>
+
   <%-- ① 社員の選択。選んで「表示」を押すと、GETで、?employeeId=... に移動する(年月の絞り込みは、リセットされる) --%>
   <div class="card">
     <form class="payroll-form" action="<c:url value='/payroll'/>" method="get">
@@ -14,6 +19,7 @@
         </c:forEach>
       </select>
       <button type="submit" class="btn btn-primary">表示</button>
+      <a class="btn push-right" href="<c:url value='/payroll/upload'/>">給与明細をアップロード</a>
     </form>
   </div>
 
