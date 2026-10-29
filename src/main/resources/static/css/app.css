@@ -332,6 +332,13 @@ textarea.form-control { resize: vertical; font-family: inherit; line-height: 1.6
 .announce-date { white-space: nowrap; color: var(--muted); }
 /* ヘッダーの、画面の名前の横に出す文字(ホームのあいさつ) */
 .topbar-sub { margin-left: 16px; color: var(--muted); }
+/* お知らせ一覧: 表示の切り替え・種類の絞り込み */
+.announce-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.announce-filter label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.announce-filter .form-control { width: auto; }
+.filter-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+/* ページ送りの「…」 */
+.pagination .ellipsis { border: none; background: none; min-width: 0; padding: 4px 2px; color: var(--muted); }
 /* ホームは、あいさつをヘッダーに出して、中身の先頭を、お知らせにする */
 .content > .section-title:first-child { margin-top: 0; }
 
