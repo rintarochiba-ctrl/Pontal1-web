@@ -21,9 +21,15 @@ import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityPr
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthFlowType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthenticationResultType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ChallengeNameType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CodeMismatchException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ExpiredCodeException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.InitiateAuthRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.InitiateAuthResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidParameterException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidPasswordException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.RespondToAuthChallengeRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.PasswordResetRequiredException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.TooManyRequestsException;
@@ -160,5 +166,106 @@ class CognitoAuthClientTest {
 
         assertFailsWith(LoginFailureReason.UNAVAILABLE);
         verify(cognito, never()).initiateAuth(any(InitiateAuthRequest.class));
+    }
+
+    // ---------- 初回ログイン(初期パスワード)----------
+
+    @Test
+    void newPasswordChallenge_carriesEmailAndCognitoSession_forTheNextStep() {
+        when(cognito.initiateAuth(any(InitiateAuthRequest.class))).thenReturn(InitiateAuthResponse.builder()
+                .challengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
+                .session("challenge-session")
+                .build());
+
+        assertThatThrownBy(() -> client.login("new@example.com", "initial-pass"))
+                .isInstanceOf(NewPasswordRequiredException.class)
+                .satisfies(e -> {
+                    NewPasswordRequiredException required = (NewPasswordRequiredException) e;
+                    assertThat(required.getEmail()).isEqualTo("new@example.com");
+                    assertThat(required.getCognitoSession()).isEqualTo("challenge-session");
+                    assertThat(required.getReason()).isEqualTo(LoginFailureReason.NEW_PASSWORD_REQUIRED);
+                });
+    }
+
+    @Test
+    void completeNewPassword_sendsSessionAndNewPassword_toCognito() {
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenReturn(RespondToAuthChallengeResponse.builder().build());
+
+        client.completeNewPassword("new@example.com", "NewPass123!", "challenge-session");
+
+        ArgumentCaptor<RespondToAuthChallengeRequest> captor = ArgumentCaptor.forClass(RespondToAuthChallengeRequest.class);
+        verify(cognito).respondToAuthChallenge(captor.capture());
+        RespondToAuthChallengeRequest request = captor.getValue();
+        assertThat(request.clientId()).isEqualTo("test-client-id");
+        assertThat(request.challengeName()).isEqualTo(ChallengeNameType.NEW_PASSWORD_REQUIRED);
+        assertThat(request.session()).isEqualTo("challenge-session");
+        assertThat(request.challengeResponses()).containsEntry("USERNAME", "new@example.com");
+        assertThat(request.challengeResponses()).containsEntry("NEW_PASSWORD", "NewPass123!");
+    }
+
+    private void assertNewPasswordFails(boolean expectedSessionExpired, String messagePart) {
+        assertThatThrownBy(() -> client.completeNewPassword("new@example.com", "pw", "s"))
+                .isInstanceOf(NewPasswordFailedException.class)
+                .satisfies(e -> {
+                    NewPasswordFailedException failed = (NewPasswordFailedException) e;
+                    assertThat(failed.isSessionExpired()).isEqualTo(expectedSessionExpired);
+                    assertThat(failed.getMessage()).contains(messagePart);
+                });
+    }
+
+    @Test
+    void completeNewPassword_whenPasswordRulesNotMet_canBeRetried() {
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenThrow(InvalidPasswordException.builder().message("Password does not conform to policy").build());
+
+        //入力し直せば、通る可能性がある(セッションは、期限切れではない)
+        assertNewPasswordFails(false, "ルールを満たしていません");
+    }
+
+    @Test
+    void completeNewPassword_whenInvalidParameter_isTreatedAsRuleViolation() {
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenThrow(InvalidParameterException.builder().message("Invalid parameter").build());
+
+        assertNewPasswordFails(false, "ルールを満たしていません");
+    }
+
+    @Test
+    void completeNewPassword_whenCognitoSessionExpired_mustStartOver() {
+        //Cognitoのセッションの期限(数分)が切れた。入力し直しても通らないので、最初のログインからやり直す
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenThrow(NotAuthorizedException.builder().message("Invalid session").build())
+                .thenThrow(CodeMismatchException.builder().message("mismatch").build())
+                .thenThrow(ExpiredCodeException.builder().message("expired").build());
+
+        assertNewPasswordFails(true, "時間が経ちすぎました");
+        assertNewPasswordFails(true, "時間が経ちすぎました");
+        assertNewPasswordFails(true, "時間が経ちすぎました");
+    }
+
+    @Test
+    void completeNewPassword_whenTooManyRequests_canRetryLater() {
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenThrow(TooManyRequestsException.builder().message("slow down").build());
+
+        assertNewPasswordFails(false, "試行が多すぎます");
+    }
+
+    @Test
+    void completeNewPassword_whenCommunicationFails_showsGenericMessage() {
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenThrow(SdkClientException.create("Unable to execute HTTP request"));
+
+        assertNewPasswordFails(false, "設定できませんでした");
+    }
+
+    @Test
+    void completeNewPassword_messages_doNotContainPassword() {
+        when(cognito.respondToAuthChallenge(any(RespondToAuthChallengeRequest.class)))
+                .thenThrow(InvalidPasswordException.builder().message("policy").build());
+
+        assertThatThrownBy(() -> client.completeNewPassword("new@example.com", "Secret-New-1!", "s"))
+                .hasMessageNotContaining("Secret-New-1!");
     }
 }

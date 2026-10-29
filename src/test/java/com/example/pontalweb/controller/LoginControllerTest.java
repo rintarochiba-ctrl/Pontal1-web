@@ -60,6 +60,18 @@ class LoginControllerTest {
     }
 
     @Test
+    void login_afterNewPasswordIsSet_showsThatMessage() throws Exception {
+        mockMvc.perform(get("/login").param("passwordset", ""))
+                .andExpect(model().attribute("infoMessage", "新しいパスワードを設定しました。新しいパスワードで、ログインしてください"));
+    }
+
+    @Test
+    void login_whenNewPasswordSessionExpired_showsThatMessage() throws Exception {
+        mockMvc.perform(get("/login").param("error", "newpasswordexpired"))
+                .andExpect(model().attribute("errorMessage", "時間が経ちすぎました。もう一度、初期パスワードでログインしてください"));
+    }
+
+    @Test
     void login_afterLogout_showsLogoutMessage() throws Exception {
         mockMvc.perform(get("/login").param("logout", ""))
                 .andExpect(model().attribute("infoMessage", "ログアウトしました"));

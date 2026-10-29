@@ -26,11 +26,14 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.pontalweb.client.SessionKeys;
 import com.example.pontalweb.controller.HomeController;
 import com.example.pontalweb.controller.LoginController;
+import com.example.pontalweb.controller.NewPasswordController;
 import com.example.pontalweb.model.LoginUser;
+import com.example.pontalweb.security.CognitoAuthClient;
 import com.example.pontalweb.security.CognitoAuthenticationProvider;
 import com.example.pontalweb.security.LoginFailedException;
 import com.example.pontalweb.security.LoginFailureHandler;
@@ -41,15 +44,21 @@ import com.example.pontalweb.security.PontalPrincipal;
 //SecurityConfigのテスト。実際のセキュリティの設定(SecurityConfig)を使って、
 //「ログインが必要か」「権限で見られる画面が分かれるか」「CSRF対策が効いているか」「ログイン・ログアウトの動き」を確認する
 //Cognitoでの確認(CognitoAuthenticationProvider)だけは、疑似のもの(Mock)に差し替える
-@WebMvcTest(controllers = { LoginController.class, HomeController.class, SecurityConfigTest.ProbeController.class })
+@WebMvcTest(controllers = { LoginController.class, HomeController.class, NewPasswordController.class,
+        SecurityConfigTest.ProbeController.class })
 @Import({ SecurityConfig.class, ClockConfig.class, LoginSuccessHandler.class, LoginFailureHandler.class, SecurityConfigTest.ProbeController.class })
 class SecurityConfigTest {
 
     //権限のテスト用に、URLだけを受ける、テスト用のController
     @Controller
     static class ProbeController {
-        @GetMapping({ "/employees", "/payroll", "/payroll/upload", "/audit-logs" })
+        @GetMapping({ "/employees", "/employees/new", "/employees/{id}/edit", "/payroll", "/payroll/upload", "/audit-logs" })
         String probe() {
+            return "probe";
+        }
+
+        @PostMapping({ "/employees", "/employees/{id}", "/employees/{id}/delete" })
+        String probePost() {
             return "probe";
         }
     }
@@ -59,6 +68,10 @@ class SecurityConfigTest {
 
     @MockBean
     private CognitoAuthenticationProvider authenticationProvider;
+
+    //NewPasswordControllerが使う(このテストでは、呼ばれない)
+    @MockBean
+    private CognitoAuthClient cognitoAuthClient;
 
     @BeforeEach
     void setUp() {
@@ -127,6 +140,88 @@ class SecurityConfigTest {
         mockMvc.perform(get("/payroll")).andExpect(status().isForbidden());
     }
 
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotOpenEmployeeRegister_orSubmitIt() throws Exception {
+        mockMvc.perform(get("/employees/new")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/employees").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotOpenEmployeeRegister() throws Exception {
+        mockMvc.perform(get("/employees/new")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canOpenEmployeeRegister_andSubmitIt() throws Exception {
+        mockMvc.perform(get("/employees/new")).andExpect(status().isOk());
+        mockMvc.perform(post("/employees").with(csrf())).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void employeeRegister_submitWithoutCsrfToken_isRejected() throws Exception {
+        mockMvc.perform(post("/employees")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotSubmitEmployeeEdit() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotSubmitEmployeeEdit() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canSubmitEmployeeEdit_butNotWithoutCsrfToken() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/employees/1")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotDeleteEmployee() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotDeleteEmployee() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canDeleteEmployee_butNotWithoutCsrfToken() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/employees/1/delete")).andExpect(status().isForbidden());
+    }
+
     // ---------- ログイン ----------
 
     @Test
@@ -166,6 +261,52 @@ class SecurityConfigTest {
         mockMvc.perform(post("/login").with(csrf()).param("email", "a@example.com").param("password", "bad"));
 
         verify(authenticationProvider, times(1)).authenticate(any());
+    }
+
+    // ---------- 初回ログインの、新しいパスワード設定(ログイン前に開く画面)----------
+
+    @Test
+    void newPasswordPage_isNotBlockedByLoginCheck() throws Exception {
+        //ログイン前でも、この画面には、入れる(ログイン画面への移動は、画面側が、「途中でなければ」と判断して行う)
+        //セキュリティの移動先(http://localhost/login)ではなく、画面側の移動先(/login)になること
+        mockMvc.perform(get("/new-password"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void newPasswordPage_whenFirstLoginIsInProgress_isShownWithoutLogin() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(SessionKeys.NEW_PASSWORD_EMAIL, "new@example.com");
+        session.setAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION, "s");
+
+        mockMvc.perform(get("/new-password").session(session))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void newPasswordSubmit_withoutCsrfToken_isRejected() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(SessionKeys.NEW_PASSWORD_EMAIL, "new@example.com");
+        session.setAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION, "s");
+
+        //他のサイトから、勝手に、パスワードの設定のフォームを送られないよう、確認用のトークンが無いと、403
+        mockMvc.perform(post("/new-password").session(session)
+                .param("newPassword", "NewPass123!").param("confirmPassword", "NewPass123!"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void newPasswordFailure_inLogin_redirectsToNewPasswordPage() throws Exception {
+        //ログインで、初期パスワードだと分かったら、失敗(エラー)ではなく、設定画面に進む
+        when(authenticationProvider.authenticate(any()))
+                .thenThrow(new com.example.pontalweb.security.NewPasswordRequiredException("new@example.com", "cognito-session"));
+
+        mockMvc.perform(post("/login").with(csrf()).param("email", "new@example.com").param("password", "initial"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/new-password"))
+                .andExpect(request().sessionAttribute(SessionKeys.NEW_PASSWORD_EMAIL, "new@example.com"))
+                .andExpect(request().sessionAttribute(SessionKeys.NEW_PASSWORD_COGNITO_SESSION, "cognito-session"));
     }
 
     // ---------- ログアウト ----------
