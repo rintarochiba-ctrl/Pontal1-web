@@ -16,7 +16,7 @@
     </c:otherwise>
   </c:choose>
 
-  <div class="card form-card">
+  <div class="card announce-form-card">
     <%-- APIが返した入力のまちがい(画面のチェックでは見つけられなかったもの)は、フォームの上に出す --%>
     <c:if test="${not empty errorMessage}">
       <div class="alert alert-error"><c:out value="${errorMessage}"/></div>
@@ -85,7 +85,7 @@
         <c:if test="${not empty errors.body}"><div class="form-error"><c:out value="${errors.body}"/></div></c:if>
       </div>
 
-      <div class="form-actions">
+      <div class="announce-form-actions">
         <a class="btn" href="${cancelUrl}">キャンセル</a>
         <button type="submit" class="btn btn-primary">保存</button>
       </div>

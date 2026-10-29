@@ -26,6 +26,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.pontalweb.client.PontalApiClient;
 import com.example.pontalweb.client.SessionKeys;
@@ -52,9 +53,14 @@ class SecurityConfigTest {
     //権限のテスト用に、URLだけを受ける、テスト用のController
     @Controller
     static class ProbeController {
-        @GetMapping({ "/employees", "/payroll", "/payroll/upload", "/audit-logs", "/announcements/new",
-                "/announcements/7/edit" })
+        @GetMapping({ "/employees", "/employees/new", "/employees/{id}/edit", "/payroll", "/payroll/upload", "/audit-logs",
+                "/announcements/new", "/announcements/7/edit" })
         String probe() {
+            return "probe";
+        }
+
+        @PostMapping({ "/employees", "/employees/{id}", "/employees/{id}/delete" })
+        String probePost() {
             return "probe";
         }
     }
@@ -138,6 +144,90 @@ class SecurityConfigTest {
     void systemAdmin_canOpenAuditLogs_butNotPayroll() throws Exception {
         mockMvc.perform(get("/audit-logs")).andExpect(status().isOk());
         mockMvc.perform(get("/payroll")).andExpect(status().isForbidden());
+    }
+
+    // ---------- 社員の登録・編集・削除(システム管理者だけ) ----------
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotOpenEmployeeRegister_orSubmitIt() throws Exception {
+        mockMvc.perform(get("/employees/new")).andExpect(status().isForbidden());
+        mockMvc.perform(post("/employees").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotOpenEmployeeRegister() throws Exception {
+        mockMvc.perform(get("/employees/new")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canOpenEmployeeRegister_andSubmitIt() throws Exception {
+        mockMvc.perform(get("/employees/new")).andExpect(status().isOk());
+        mockMvc.perform(post("/employees").with(csrf())).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void employeeRegister_submitWithoutCsrfToken_isRejected() throws Exception {
+        mockMvc.perform(post("/employees")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canOpenEmployeeEdit() throws Exception {
+        mockMvc.perform(get("/employees/1/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotSubmitEmployeeEdit() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotSubmitEmployeeEdit() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canSubmitEmployeeEdit_butNotWithoutCsrfToken() throws Exception {
+        mockMvc.perform(post("/employees/1").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/employees/1")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void generalUser_cannotDeleteEmployee() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "HR_ADMIN" })
+    void hrAdmin_cannotDeleteEmployee() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = { "USER", "SYSTEM_ADMIN" })
+    void systemAdmin_canDeleteEmployee_butNotWithoutCsrfToken() throws Exception {
+        mockMvc.perform(post("/employees/1/delete").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(post("/employees/1/delete")).andExpect(status().isForbidden());
     }
 
     // ---------- お知らせの作成・編集(システム管理者かHR管理者だけ) ----------
