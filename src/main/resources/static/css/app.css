@@ -317,6 +317,10 @@ textarea.form-control { resize: vertical; font-family: inherit; line-height: 1.6
 .payroll-filter { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .push-right { margin-left: auto; }
 
+/* 給与明細のアップロード履歴 */
+.history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.history-head h2 { margin: 0; }
+
 /* 給与明細のアップロード */
 .upload-card { max-width: 560px; }
 .upload-card .check-label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; }
